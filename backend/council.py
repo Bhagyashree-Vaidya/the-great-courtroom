@@ -3,19 +3,27 @@
 from typing import List, Dict, Any, Tuple
 from .openrouter import query_models_parallel, query_model
 from .config import COUNCIL_MODELS, CHAIRMAN_MODEL
+from .prompts import (
+    HARD_RULES,
+    STAGE1_CRITIQUE_PROMPT,
+    STAGE2_RANKING_PROMPT,
+    STAGE3_CHAIRMAN_PROMPT,
+    TITLE_PROMPT,
+)
 
 
 async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:
     """
-    Stage 1: Collect individual responses from all council models.
+    Stage 1: Each council model critiques and rewrites the draft post.
 
     Args:
-        user_query: The user's question
+        user_query: The user's draft LinkedIn post
 
     Returns:
         List of dicts with 'model' and 'response' keys
     """
-    messages = [{"role": "user", "content": user_query}]
+    prompt = STAGE1_CRITIQUE_PROMPT.format(draft=user_query, hard_rules=HARD_RULES)
+    messages = [{"role": "user", "content": prompt}]
 
     # Query all models in parallel
     responses = await query_models_parallel(COUNCIL_MODELS, messages)
@@ -61,36 +69,10 @@ async def stage2_collect_rankings(
         for label, result in zip(labels, stage1_results)
     ])
 
-    ranking_prompt = f"""You are evaluating different responses to the following question:
-
-Question: {user_query}
-
-Here are the responses from different models (anonymized):
-
-{responses_text}
-
-Your task:
-1. First, evaluate each response individually. For each response, explain what it does well and what it does poorly.
-2. Then, at the very end of your response, provide a final ranking.
-
-IMPORTANT: Your final ranking MUST be formatted EXACTLY as follows:
-- Start with the line "FINAL RANKING:" (all caps, with colon)
-- Then list the responses from best to worst as a numbered list
-- Each line should be: number, period, space, then ONLY the response label (e.g., "1. Response A")
-- Do not add any other text or explanations in the ranking section
-
-Example of the correct format for your ENTIRE response:
-
-Response A provides good detail on X but misses Y...
-Response B is accurate but lacks depth on Z...
-Response C offers the most comprehensive answer...
-
-FINAL RANKING:
-1. Response C
-2. Response A
-3. Response B
-
-Now provide your evaluation and ranking:"""
+    ranking_prompt = STAGE2_RANKING_PROMPT.format(
+        draft=user_query,
+        responses_text=responses_text,
+    )
 
     messages = [{"role": "user", "content": ranking_prompt}]
 
@@ -139,22 +121,12 @@ async def stage3_synthesize_final(
         for result in stage2_results
     ])
 
-    chairman_prompt = f"""You are the Chairman of an LLM Council. Multiple AI models have provided responses to a user's question, and then ranked each other's responses.
-
-Original Question: {user_query}
-
-STAGE 1 - Individual Responses:
-{stage1_text}
-
-STAGE 2 - Peer Rankings:
-{stage2_text}
-
-Your task as Chairman is to synthesize all of this information into a single, comprehensive, accurate answer to the user's original question. Consider:
-- The individual responses and their insights
-- The peer rankings and what they reveal about response quality
-- Any patterns of agreement or disagreement
-
-Provide a clear, well-reasoned final answer that represents the council's collective wisdom:"""
+    chairman_prompt = STAGE3_CHAIRMAN_PROMPT.format(
+        draft=user_query,
+        stage1_text=stage1_text,
+        stage2_text=stage2_text,
+        hard_rules=HARD_RULES,
+    )
 
     messages = [{"role": "user", "content": chairman_prompt}]
 
@@ -265,12 +237,7 @@ async def generate_conversation_title(user_query: str) -> str:
     Returns:
         A short title (3-5 words)
     """
-    title_prompt = f"""Generate a very short title (3-5 words maximum) that summarizes the following question.
-The title should be concise and descriptive. Do not use quotes or punctuation in the title.
-
-Question: {user_query}
-
-Title:"""
+    title_prompt = TITLE_PROMPT.format(draft=user_query)
 
     messages = [{"role": "user", "content": title_prompt}]
 
