@@ -1,10 +1,28 @@
-# CLAUDE.md - Technical Notes for LLM Council
+# CLAUDE.md - Technical Notes for LinkedIn Council
 
 This file contains technical details, architectural decisions, and important implementation notes for future development sessions.
 
 ## Project Overview
 
-LLM Council is a 3-stage deliberation system where multiple LLMs collaboratively answer user questions. The key innovation is anonymized peer review in Stage 2, preventing models from playing favorites.
+**LinkedIn Council** is a fork of karpathy/llm-council, converted from a general Q&A council into a LinkedIn post optimizer. The user pastes a draft post; the 3-stage deliberation pipeline critiques and rewrites it:
+
+- **Stage 1**: Each council model critiques the draft on four dimensions (Hook scored 1-10 with 2 alternative openers, Voice flagging AI/corporate-speak with quoted lines, Structure/mobile scannability, and Audience as seen by a tech recruiter evaluating a PM/TPM/SWE candidate), then ends with its own rewrite.
+- **Stage 2**: Anonymized peer ranking, ranked on critique usefulness, specificity (quoted lines beat vague advice), and rewrite quality.
+- **Stage 3**: The Chairman outputs a consensus summary (3-4 sentences), one final optimized post, and a before/after score out of 10.
+
+The architecture is unchanged from upstream. Only prompts, model config, and UI copy changed.
+
+## Editing the Prompts
+
+**All prompts live in `backend/prompts.py`** — one clearly marked place for hand-tuning:
+
+- `HARD_RULES` — injected into every stage. **The no-em-dash rule lives here**: rewrites must contain ZERO em dashes, no AI-sounding phrases ("thrilled to announce", "humbled", "delve", "leverage", "game-changer", etc.), contractions and short punchy sentences are good, and rewrites should sound like a real person thinking out loud.
+- `STAGE1_CRITIQUE_PROMPT` — the four-dimension critique. Edit this to change tone or add reference posts ("sounds like Shree" examples).
+- `STAGE2_RANKING_PROMPT` — ranking criteria. **Do not change the "FINAL RANKING:" format block**; `council.parse_ranking_from_text()` parses it.
+- `STAGE3_CHAIRMAN_PROMPT` — final synthesis structure.
+- `TITLE_PROMPT` — conversation title generation.
+
+The key innovation from upstream remains: anonymized peer review in Stage 2, preventing models from playing favorites.
 
 ## Architecture
 
@@ -123,7 +141,7 @@ All backend modules use relative imports (e.g., `from .config import ...`) not a
 All ReactMarkdown components must be wrapped in `<div className="markdown-content">` for proper spacing. This class is defined globally in `index.css`.
 
 ### Model Configuration
-Models are hardcoded in `backend/config.py`. Chairman can be same or different from council members. The current default is Gemini as chairman per user preference.
+Models are hardcoded in `backend/config.py`. Chairman can be same or different from council members. Current council: gpt-5.1, gemini-3.1-pro-preview, claude-sonnet-4.5, grok-4.3. Chairman: claude-sonnet-4.5. OpenRouter model IDs rot over time — verify against https://openrouter.ai/api/v1/models before changing.
 
 ## Common Gotchas
 
@@ -148,9 +166,9 @@ Use `test_openrouter.py` to verify API connectivity and test different model ide
 ## Data Flow Summary
 
 ```
-User Query
+User's Draft LinkedIn Post
     ↓
-Stage 1: Parallel queries → [individual responses]
+Stage 1: Parallel critique queries → [critiques + rewrites]
     ↓
 Stage 2: Anonymize → Parallel ranking queries → [evaluations + parsed rankings]
     ↓
