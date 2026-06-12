@@ -1,0 +1,27 @@
+# Fly.io config for the LinkedIn Council backend.
+# Rename "app" if you want a different Fly app name; the deploy guide uses
+# this one. Secrets (OPENROUTER_API_KEY, COUNCIL_PASSWORD, ALLOWED_ORIGINS)
+# are set with `fly secrets set`, NOT here.
+
+app = "linkedin-council-api"
+primary_region = "sea"
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
