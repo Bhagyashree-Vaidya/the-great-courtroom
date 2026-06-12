@@ -9,9 +9,11 @@ export default function Stage1({ responses }) {
     return null;
   }
 
+  const label = (r) => r.name || r.model;
+
   return (
     <div className="stage stage1">
-      <h3 className="stage-title">Stage 1: Individual Critiques</h3>
+      <h3 className="stage-title">The five perspectives</h3>
 
       <div className="tabs">
         {responses.map((resp, index) => (
@@ -20,13 +22,13 @@ export default function Stage1({ responses }) {
             className={`tab ${activeTab === index ? 'active' : ''}`}
             onClick={() => setActiveTab(index)}
           >
-            {resp.model.split('/')[1] || resp.model}
+            {label(resp)}
           </button>
         ))}
       </div>
 
       <div className="tab-content">
-        <div className="model-name">{responses[activeTab].model}</div>
+        <div className="model-name">{label(responses[activeTab])}</div>
         <div className="response-text markdown-content">
           <ReactMarkdown>{responses[activeTab].response}</ReactMarkdown>
         </div>

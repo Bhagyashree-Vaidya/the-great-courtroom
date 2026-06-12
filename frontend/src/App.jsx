@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
-import { api } from './api';
+import { api, setPassword } from './api';
 import './App.css';
 
 function App() {
@@ -55,6 +55,12 @@ function App() {
 
   const handleSelectConversation = (id) => {
     setCurrentConversationId(id);
+  };
+
+  const handleLogout = () => {
+    setPassword('');
+    // Reload so the PasswordGate re-checks and returns to the landing page.
+    window.location.reload();
   };
 
   const handleSendMessage = async (content) => {
@@ -188,6 +194,7 @@ function App() {
         currentConversationId={currentConversationId}
         onSelectConversation={handleSelectConversation}
         onNewConversation={handleNewConversation}
+        onLogout={handleLogout}
       />
       <ChatInterface
         conversation={currentConversation}

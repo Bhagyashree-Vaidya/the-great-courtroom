@@ -1,65 +1,67 @@
 .stage {
-  margin: 24px 0;
-  padding: 20px;
-  background: #fafafa;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  margin: 22px 0;
+  padding: 26px 26px 28px;
+  background: var(--paper-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--paper-edge);
+  box-shadow: var(--shadow-md);
 }
 
 .stage-title {
-  margin: 0 0 16px 0;
-  color: #333;
-  font-size: 16px;
+  margin: 0 0 18px 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
   font-weight: 600;
 }
 
 .tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   flex-wrap: wrap;
 }
 
 .tab {
   padding: 8px 16px;
-  background: #ffffff;
-  border: 1px solid #d0d0d0;
-  border-radius: 6px 6px 0 0;
-  color: #666;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
+  background: var(--paper-beige);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  font-weight: 500;
+  transition: all 0.18s ease;
 }
 
 .tab:hover {
-  background: #f0f0f0;
-  color: #333;
-  border-color: #4a90e2;
+  color: var(--ink);
+  border-color: var(--line-strong);
 }
 
 .tab.active {
-  background: #ffffff;
-  color: #4a90e2;
-  border-color: #4a90e2;
-  border-bottom-color: #ffffff;
+  background: var(--terracotta);
+  color: var(--paper-card);
+  border-color: var(--terracotta);
   font-weight: 600;
 }
 
 .tab-content {
-  background: #ffffff;
-  padding: 16px;
-  border-radius: 6px;
-  border: 1px solid #e0e0e0;
+  background: var(--paper-cream);
+  padding: 22px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--paper-edge);
 }
 
 .model-name {
-  color: #888;
-  font-size: 12px;
-  margin-bottom: 12px;
-  font-family: monospace;
+  color: var(--terracotta);
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 10px;
 }
 
 .response-text {
-  color: #333;
-  line-height: 1.6;
+  color: var(--ink);
+  line-height: 1.7;
 }
