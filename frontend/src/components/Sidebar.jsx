@@ -10,8 +10,8 @@ export default function Sidebar({
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h1 className="sidebar-brand">The Council</h1>
-        <p className="sidebar-tagline">Five perspectives, one decision</p>
+        <h1 className="sidebar-brand">The Great Courtroom</h1>
+        <p className="sidebar-tagline">Don't suck at decision making</p>
         <button className="new-conversation-btn" onClick={onNewConversation}>
           + New decision
         </button>

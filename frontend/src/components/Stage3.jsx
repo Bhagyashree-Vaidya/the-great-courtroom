@@ -8,7 +8,7 @@ export default function Stage3({ finalResponse }) {
 
   return (
     <div className="stage stage3">
-      <h3 className="stage-title">The Council's verdict</h3>
+      <h3 className="stage-title">The Courtroom's verdict</h3>
       <div className="final-response">
         <div className="chairman-label">
           {finalResponse.name || 'The Council'}

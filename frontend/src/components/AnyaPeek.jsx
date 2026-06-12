@@ -3,12 +3,13 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /**
- * Anya peeking over the password field (renders /anya.glb).
- * Her head turns to follow the pointer, and follows the caret while typing.
- * Moods: neutral (idle bob), shocked (head shake), happy (bounce).
+ * Anya behind the password field (renders /anya.glb).
+ * Her hands rest on the input's top edge and tap idly; her head follows the
+ * pointer and the caret. While the field is focused she squints into a smirk
+ * and tilts her head (scheming). Moods: shocked = head shake, happy = bounce.
  * Falls back to nothing on load failure (parent shows the SVG face instead).
  */
-export default function AnyaPeek({ mood, lookTargetRef, onLoadError }) {
+export default function AnyaPeek({ mood, lookTargetRef, typingRef, onLoadError }) {
   const mountRef = useRef(null);
   const moodRef = useRef(mood);
   const [failed, setFailed] = useState(false);
@@ -44,12 +45,18 @@ export default function AnyaPeek({ mood, lookTargetRef, onLoadError }) {
 
     let model = null;
     let headNode = null;
+    let handNode = null;
+    let eyeNode = null;
     let disposed = false;
     let frameId = 0;
-    let shockT = 0; // shake timer
-    let happyT = 0; // bounce timer
+    let shockT = 0;
+    let happyT = 0;
     let prevMood = 'neutral';
     let baseY = 0;
+    let handBaseRot = 0;
+
+    // Bottom edge of the visible frustum at the model plane (z≈0).
+    const frustumHalfH = camera.position.z * Math.tan((camera.fov / 2) * (Math.PI / 180));
 
     const loader = new GLTFLoader();
     loader.load(
@@ -58,29 +65,60 @@ export default function AnyaPeek({ mood, lookTargetRef, onLoadError }) {
         if (disposed) return;
         model = gltf.scene;
 
-        // Center and scale so she fits the frame, peeking from the bottom.
         const box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
-        // Zoom on head + hands; her lower body gets cropped by the canvas
-        // bottom, which hides behind the opaque password input ("peeking").
         const scale = 4.6 / size.y;
         model.scale.setScalar(scale);
-        model.position.set(
-          -center.x * scale,
-          -center.y * scale - 1.05,
-          -center.z * scale
-        );
+        model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
 
         const group = new THREE.Group();
         group.add(model);
         scene.add(group);
+
+        // Head, hair, and eyes are sibling nodes with different pivots.
+        // Reparent them into one pivot group at the head's center so they
+        // rotate together (THREE.Object3D.attach preserves world transforms).
+        const headObj = gltf.scene.getObjectByName('headobject');
+        const hairObj = gltf.scene.getObjectByName('hair');
+        const eyeObj = gltf.scene.getObjectByName('eye');
+        handNode = gltf.scene.getObjectByName('hand');
+        eyeNode = eyeObj;
+        handBaseRot = handNode ? handNode.rotation.x : 0;
+
+        if (headObj) {
+          group.updateMatrixWorld(true);
+          const headCenter = new THREE.Box3()
+            .setFromObject(headObj)
+            .getCenter(new THREE.Vector3());
+          const parent = headObj.parent;
+          const pivot = new THREE.Group();
+          parent.add(pivot);
+          pivot.position.copy(parent.worldToLocal(headCenter.clone()));
+          pivot.updateMatrixWorld(true);
+          [headObj, hairObj, eyeObj].forEach((n) => n && pivot.attach(n));
+          headNode = pivot;
+        } else {
+          headNode = gltf.scene;
+        }
+
+        // Place her so the HANDS sit right at the canvas bottom edge — the
+        // input field overlaps that edge, so they read as resting on it.
+        if (handNode) {
+          group.updateMatrixWorld(true);
+          const handBox = new THREE.Box3().setFromObject(handNode);
+          const handY = (handBox.min.y + handBox.max.y) / 2;
+          group.position.y = -frustumHalfH + 0.55 - handY;
+        } else {
+          group.position.y = -1.05;
+        }
+
         model = group;
         baseY = group.position.y;
 
-        // The head is its own node in this model — rotate it to track.
-        headNode = gltf.scene.getObjectByName('headobject') || gltf.scene;
-        if (import.meta.env.DEV) window.__anya = { headNode, model, gltfScene: gltf.scene, lookTargetRef, targetRot };
+        if (import.meta.env.DEV) {
+          window.__anya = { headNode, handNode, eyeNode, model, lookTargetRef, targetRot };
+        }
       },
       undefined,
       () => {
@@ -91,26 +129,26 @@ export default function AnyaPeek({ mood, lookTargetRef, onLoadError }) {
 
     const clock = new THREE.Clock();
     const targetRot = { x: 0, y: 0 };
+    let smirk = 0; // 0..1 lerped typing intensity
 
     const animate = () => {
       frameId = requestAnimationFrame(animate);
       const t = clock.getElapsedTime();
       const m = moodRef.current;
+      const typing = !!typingRef?.current;
 
       if (model) {
-        // Pointer / caret target -> desired head rotation.
         const tgt = lookTargetRef.current;
         if (tgt && mountRef.current) {
           const r = mountRef.current.getBoundingClientRect();
           const cx = r.left + r.width / 2;
-          const cy = r.top + r.height * 0.42; // approx her eye line
+          const cy = r.top + r.height * 0.42;
           const nx = THREE.MathUtils.clamp((tgt.x - cx) / (window.innerWidth / 2), -1, 1);
           const ny = THREE.MathUtils.clamp((tgt.y - cy) / (window.innerHeight / 2), -1, 1);
           targetRot.y = nx * 0.55;
           targetRot.x = ny * 0.35;
         }
 
-        // Mood transitions
         if (m !== prevMood) {
           if (m === 'shocked') shockT = 0.55;
           if (m === 'happy') happyT = 1.0;
@@ -119,17 +157,29 @@ export default function AnyaPeek({ mood, lookTargetRef, onLoadError }) {
 
         const dt = clock.getDelta();
 
+        // Smirk while typing: squinted eyes + sly head tilt.
+        smirk += ((typing ? 1 : 0) - smirk) * 0.08;
+        if (eyeNode) eyeNode.scale.y = 1 - smirk * 0.45;
+
         if (shockT > 0) {
-          // quick "no-no" head shake
           shockT = Math.max(0, shockT - dt);
-          headNode.rotation.y = Math.sin(t * 38) * 0.22 * (shockT / 0.55);
-          headNode.rotation.x = 0;
+          if (headNode) {
+            headNode.rotation.y = Math.sin(t * 38) * 0.22 * (shockT / 0.55);
+            headNode.rotation.x = 0;
+          }
         } else if (headNode) {
           headNode.rotation.y += (targetRot.y - headNode.rotation.y) * 0.12;
           headNode.rotation.x += (targetRot.x - headNode.rotation.x) * 0.12;
         }
+        if (headNode) headNode.rotation.z = smirk * 0.14;
 
-        // Idle bob + happy bounce
+        // Hands tap on the field: quicker while typing, lazy when idle.
+        if (handNode) {
+          const speed = typing ? 9 : 2.2;
+          const amp = typing ? 0.1 : 0.05;
+          handNode.rotation.x = handBaseRot + Math.abs(Math.sin(t * speed)) * amp;
+        }
+
         let bounce = 0;
         if (happyT > 0) {
           happyT = Math.max(0, happyT - dt);

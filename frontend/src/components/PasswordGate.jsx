@@ -8,22 +8,27 @@ const AnyaPeek = lazy(() => import('./AnyaPeek'));
 
 const THINKERS = [
   {
+    key: 'contrarian',
     name: 'The Contrarian',
     line: 'Asks, "What if everyone is wrong?"',
   },
   {
+    key: 'first_principles',
     name: 'The First Principles Thinker',
     line: 'Strips the problem down to the basics and rebuilds it from the ground up.',
   },
   {
+    key: 'expansionist',
     name: 'The Expansionist',
     line: 'Looks for bigger opportunities, hidden possibilities, and paths nobody considered.',
   },
   {
+    key: 'outsider',
     name: 'The Outsider',
     line: 'Brings a fresh set of eyes and questions assumptions that insiders often miss.',
   },
   {
+    key: 'skeptic',
     name: 'The Skeptic',
     line: 'Stress-tests ideas, spots risks, and looks for what could break.',
   },
@@ -135,7 +140,9 @@ export default function PasswordGate({ children }) {
   const [mood, setMood] = useState('neutral'); // neutral | shocked | happy
   const [shake, setShake] = useState(false);
   const [modelFailed, setModelFailed] = useState(false);
+  const [policyOpen, setPolicyOpen] = useState(false); // terms & privacy modal
   const lookTargetRef = useRef(null); // {x, y} the character looks at
+  const typingRef = useRef(false); // true while the password field is focused
   const loginRef = useRef(null);
   const cardRef = useRef(null);
   const inputRef = useRef(null);
@@ -151,6 +158,36 @@ export default function PasswordGate({ children }) {
       .then((ok) => setStatus(ok ? 'open' : 'locked'))
       .catch(() => setStatus('locked'));
   }, []);
+
+  // Persona pose snapshots for the thinker cards (rendered from the GLB once).
+  const [poses, setPoses] = useState(null);
+  useEffect(() => {
+    if (status !== 'locked') return;
+    import('../anyaPoses')
+      .then((m) => m.generatePoseImages())
+      .then((imgs) => {
+        setPoses(imgs);
+        // Swap the static SVG favicon for a real rendered Anya headshot.
+        try {
+          const img = new Image();
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = 64;
+            c.height = 64;
+            const ctx = c.getContext('2d');
+            const s = Math.min(img.width, img.height);
+            ctx.drawImage(img, (img.width - s) / 2, 0, s, s, 0, 0, 64, 64);
+            const link = document.querySelector("link[rel='icon']");
+            if (link) {
+              link.type = 'image/png';
+              link.href = c.toDataURL('image/png');
+            }
+          };
+          img.src = imgs.skeptic;
+        } catch { /* favicon swap is best-effort */ }
+      })
+      .catch(() => setPoses(null)); // cards just render without images
+  }, [status]);
 
   // ---------- Eye tracking ----------
   const lookAt = useCallback((x, y) => {
@@ -296,7 +333,7 @@ export default function PasswordGate({ children }) {
   return (
     <div className="landing">
       <nav className="landing-nav">
-        <span className="wordmark">The Council</span>
+        <span className="wordmark">The Great Courtroom</span>
         <button className="nav-login" onClick={scrollToLogin}>
           Log in
         </button>
@@ -310,6 +347,7 @@ export default function PasswordGate({ children }) {
             <br />
             Less Guesswork.
           </h1>
+          <p className="tagline">Don't suck at decision making</p>
           <p className="hero-lede">
             Most decisions are not short on opinions. They're short on
             perspective. This council brings together five different ways of
@@ -319,8 +357,11 @@ export default function PasswordGate({ children }) {
 
         <section className="thinkers">
           {THINKERS.map((t, i) => (
-            <article className="thinker-card" key={t.name}>
+            <article className="thinker-card" key={t.key}>
               <span className="thinker-num">{String(i + 1).padStart(2, '0')}</span>
+              {poses?.[t.key] && (
+                <img className="thinker-pose" src={poses[t.key]} alt="" />
+              )}
               <h3>{t.name}</h3>
               <p>{t.line}</p>
             </article>
@@ -355,13 +396,14 @@ export default function PasswordGate({ children }) {
             onSubmit={handleSubmit}
             onAnimationEnd={() => setShake(false)}
           >
-            <h2>Enter the council</h2>
+            <h2>Enter the courtroom</h2>
             <p className="login-sub">This is a private room. Sign in to begin.</p>
             {!modelFailed ? (
               <Suspense fallback={<div className="anya-peek" />}>
                 <AnyaPeek
                   mood={mood}
                   lookTargetRef={lookTargetRef}
+                  typingRef={typingRef}
                   onLoadError={() => setModelFailed(true)}
                 />
               </Suspense>
@@ -381,6 +423,8 @@ export default function PasswordGate({ children }) {
               placeholder="Password"
               value={input}
               onChange={handleInputChange}
+              onFocus={() => { typingRef.current = true; }}
+              onBlur={() => { typingRef.current = false; }}
               autoFocus
             />
             {error && <div className="login-error">{error}</div>}
@@ -392,10 +436,114 @@ export default function PasswordGate({ children }) {
       </main>
 
       <footer className="landing-footer">
-        <span>The Council</span>
-        <span className="dot">·</span>
-        <span>Five perspectives, one calmer decision</span>
+        <div className="footer-card">
+          <div className="footer-id">
+            <span className="footer-name">Bhagyashree Vaidya</span>
+            <a href="tel:+12066730335">+1 (206) 673 0335</a>
+            <a href="mailto:bhagyashreevaidya08@gmail.com">
+              bhagyashreevaidya08@gmail.com
+            </a>
+          </div>
+
+          <div className="footer-icons">
+            <a
+              href="https://shreevaidya.com"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Website"
+              title="shreevaidya.com"
+            >
+              {/* globe */}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z" />
+              </svg>
+            </a>
+            <a
+              href="https://www.linkedin.com/in/bhagyashree-vaidya-6b47a811a/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="LinkedIn"
+              title="LinkedIn"
+            >
+              {/* linkedin */}
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.4 8.5h4.2V23H.4V8.5zm7.1 0h4v2h.06c.56-1.06 1.93-2.18 3.97-2.18 4.25 0 5.03 2.8 5.03 6.44V23h-4.2v-6.6c0-1.58-.03-3.6-2.2-3.6-2.2 0-2.54 1.72-2.54 3.5V23H7.5V8.5z" />
+              </svg>
+            </a>
+            <a
+              href="https://wa.me/12066730335"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="WhatsApp"
+              title="WhatsApp: +1 206 673 0335"
+            >
+              {/* whatsapp */}
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.6 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.6-6.1c-.3-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.3-.7.8-.8 1-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4 0-.5.1-.7l.4-.5c.1-.2.1-.3 0-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.6 1.1 2.8c.1.2 1.9 2.9 4.6 4 .6.3 1.1.4 1.5.6.6.2 1.2.2 1.6.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2 0-.1-.2-.2-.4-.3z" />
+              </svg>
+            </a>
+            <a href="mailto:bhagyashreevaidya08@gmail.com" aria-label="Email" title="Email">
+              {/* mail */}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+                <path d="M3 6.5l9 6.5 9-6.5" />
+              </svg>
+            </a>
+          </div>
+
+          <div className="footer-legal">
+            <span>© 2026 Bhagyashree Vaidya. All rights reserved.</span>
+            <button className="footer-link" onClick={() => setPolicyOpen(true)}>
+              Terms &amp; Privacy
+            </button>
+          </div>
+        </div>
       </footer>
+
+      {policyOpen && (
+        <div className="policy-overlay" onClick={() => setPolicyOpen(false)}>
+          <div
+            className="policy-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Terms and Privacy"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2>Terms &amp; Privacy</h2>
+            <h3>What this is</h3>
+            <p>
+              The Great Courtroom is a just-for-fun portfolio project by
+              Bhagyashree Vaidya. It is not a commercial product, and nothing it
+              outputs is professional, legal, financial, or career advice. Five
+              AI personas argue about your question; you make your own call.
+            </p>
+            <h3>Privacy</h3>
+            <p>
+              No personally identifiable information (PII) is collected,
+              captured, sold, or shared. There are no analytics, no trackers,
+              no ad pixels, and no user accounts. The only data handled is the
+              text you choose to submit, which is sent to AI model providers
+              (via OpenRouter) solely to generate a response, and lightweight
+              conversation history stored temporarily on the server, which can
+              be wiped at any time. Please don't paste sensitive personal
+              information into the app.
+            </p>
+            <h3>Cookies</h3>
+            <p>
+              No cookies are used. Your password is kept in your own browser's
+              local storage so you don't have to retype it.
+            </p>
+            <h3>Liability</h3>
+            <p>
+              Provided as-is, with no warranties of any kind. Use it for fun.
+            </p>
+            <button className="policy-close" onClick={() => setPolicyOpen(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

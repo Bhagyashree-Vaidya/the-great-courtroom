@@ -41,7 +41,7 @@ export default function ChatInterface({
     return (
       <div className="chat-interface">
         <div className="empty-state">
-          <h2>Welcome to the Council</h2>
+          <h2>Welcome to the Great Courtroom</h2>
           <p>Start a new decision and five thinkers will weigh in</p>
         </div>
       </div>
@@ -54,7 +54,7 @@ export default function ChatInterface({
         {conversation.messages.length === 0 ? (
           <div className="empty-state">
             <h2>What are you deciding?</h2>
-            <p>Describe the decision you're weighing. The Contrarian, the First Principles Thinker, the Expansionist, the Outsider, and the Skeptic will each weigh in, then the Council synthesizes a balanced view.</p>
+            <p>Describe the decision you're weighing. The Contrarian, the First Principles Thinker, the Expansionist, the Outsider, and the Skeptic will each weigh in, then the Courtroom synthesizes a balanced view.</p>
           </div>
         ) : (
           conversation.messages.map((msg, index) => (
@@ -70,7 +70,7 @@ export default function ChatInterface({
                 </div>
               ) : (
                 <div className="assistant-message">
-                  <div className="message-label">The Council</div>
+                  <div className="message-label">The Great Courtroom</div>
 
                   {/* Stage 1 */}
                   {msg.loading?.stage1 && (
@@ -100,7 +100,7 @@ export default function ChatInterface({
                   {msg.loading?.stage3 && (
                     <div className="stage-loading">
                       <div className="spinner"></div>
-                      <span>The Council is reaching a verdict...</span>
+                      <span>The Courtroom is reaching a verdict...</span>
                     </div>
                   )}
                   {msg.stage3 && <Stage3 finalResponse={msg.stage3} />}

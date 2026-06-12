@@ -136,13 +136,13 @@ async def stage3_synthesize_final(
 
     if response is None:
         return {
-            "name": "The Council",
+            "name": "The Great Courtroom",
             "model": CHAIRMAN_MODEL,
             "response": "Error: Unable to generate the final verdict.",
         }
 
     return {
-        "name": "The Council",
+        "name": "The Great Courtroom",
         "model": CHAIRMAN_MODEL,
         "response": response.get("content", ""),
     }
@@ -226,7 +226,7 @@ async def run_full_council(user_query: str) -> Tuple[List, List, Dict, Dict]:
 
     if not stage1_results:
         return [], [], {
-            "name": "The Council",
+            "name": "The Great Courtroom",
             "model": "error",
             "response": "All thinkers failed to respond. Please try again."
         }, {}
