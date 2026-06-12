@@ -1,4 +1,5 @@
 # LLM Council
+Try - [council.shreevaidya.com](https://council.shreevaidya.com/)
 
 ![llmcouncil](header.jpg)
 
