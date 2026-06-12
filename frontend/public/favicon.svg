@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Anya-style fallback favicon: pink bob, hair "ears", green eyes -->
+  <circle cx="32" cy="34" r="22" fill="#fcebe3"/>
+  <path d="M10 36 Q8 12 32 10 Q56 12 54 36 Q54 20 32 18 Q10 20 10 36 Z" fill="#e89bb0"/>
+  <path d="M12 34 Q10 16 32 14 Q54 16 52 34 L52 40 Q47 26 32 26 Q17 26 12 40 Z" fill="#e89bb0"/>
+  <path d="M14 22 L6 12 L18 14 Z" fill="#2e2a26"/>
+  <path d="M50 22 L58 12 L46 14 Z" fill="#2e2a26"/>
+  <circle cx="24" cy="38" r="4.5" fill="#5d7a5a"/>
+  <circle cx="40" cy="38" r="4.5" fill="#5d7a5a"/>
+  <circle cx="25.5" cy="36.5" r="1.5" fill="#fff"/>
+  <circle cx="41.5" cy="36.5" r="1.5" fill="#fff"/>
+  <path d="M28 48 Q32 51 36 48" stroke="#7b6758" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <circle cx="19" cy="45" r="3" fill="#d8b7b1" opacity="0.8"/>
+  <circle cx="45" cy="45" r="3" fill="#d8b7b1" opacity="0.8"/>
+</svg>
