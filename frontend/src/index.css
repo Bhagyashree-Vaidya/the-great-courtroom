@@ -15,6 +15,10 @@
   --terracotta: #c98e72;
   --brown: #7b6758;
 
+  /* Deepened accent variants — readable on cream, used for text + buttons */
+  --rose-deep: #b3847c;
+  --sage-deep: #7e8f74;
+
   /* Text — charcoal brown, never black */
   --ink: #3b332b;
   --ink-soft: #6f6457;
@@ -86,7 +90,7 @@ h1, h2, h3, h4 {
   line-height: 1.2;
 }
 
-a { color: var(--terracotta); }
+a { color: var(--rose-deep); }
 
 ::selection {
   background: var(--rose);
@@ -104,7 +108,7 @@ button {
   width: 18px;
   height: 18px;
   border: 2px solid var(--line-strong);
-  border-top-color: var(--terracotta);
+  border-top-color: var(--sage-deep);
   border-radius: 50%;
   animation: spin 0.9s linear infinite;
 }
@@ -162,7 +166,7 @@ button {
 }
 
 .markdown-content li { margin: 6px 0; }
-.markdown-content li::marker { color: var(--terracotta); }
+.markdown-content li::marker { color: var(--rose-deep); }
 
 .markdown-content pre {
   background: var(--paper-beige);

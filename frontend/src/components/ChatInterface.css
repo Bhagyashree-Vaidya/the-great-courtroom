@@ -51,7 +51,7 @@
   font-family: var(--font-sans);
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--terracotta);
+  color: var(--rose-deep);
   margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -125,7 +125,7 @@
 .message-input::placeholder { color: var(--ink-faint); }
 
 .message-input:focus {
-  border-color: var(--terracotta);
+  border-color: var(--rose-deep);
 }
 
 .message-input:disabled {
@@ -135,7 +135,7 @@
 
 .send-button {
   padding: 15px 30px;
-  background: var(--terracotta);
+  background: var(--sage-deep);
   border: none;
   border-radius: var(--radius-md);
   color: var(--paper-card);
@@ -144,15 +144,15 @@
   font-weight: 600;
   white-space: nowrap;
   align-self: flex-end;
-  box-shadow: 0 2px 0 #a9714f, var(--shadow-sm);
+  box-shadow: 0 2px 0 #67785e, var(--shadow-sm);
   transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s ease;
 }
 
-.send-button:hover:not(:disabled) { background: #bd8064; }
+.send-button:hover:not(:disabled) { background: #8da183; }
 
 .send-button:active:not(:disabled) {
   transform: translateY(2px);
-  box-shadow: 0 0 0 #a9714f, var(--shadow-sm);
+  box-shadow: 0 0 0 #67785e, var(--shadow-sm);
 }
 
 .send-button:disabled {
