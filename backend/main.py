@@ -13,7 +13,7 @@ from . import storage
 from .config import COUNCIL_PASSWORD, ALLOWED_ORIGINS
 from .council import run_full_council, generate_conversation_title, stage1_collect_responses, stage2_collect_rankings, stage3_synthesize_final, calculate_aggregate_rankings
 
-app = FastAPI(title="LinkedIn Council API")
+app = FastAPI(title="Council API")
 
 # Enable CORS. Origins are configurable via ALLOWED_ORIGINS env var.
 app.add_middleware(
@@ -62,7 +62,7 @@ class Conversation(BaseModel):
 @app.get("/")
 async def root():
     """Health check endpoint (open, so the host can probe it)."""
-    return {"status": "ok", "service": "LinkedIn Council API"}
+    return {"status": "ok", "service": "Council API"}
 
 
 @app.get("/api/auth/check")

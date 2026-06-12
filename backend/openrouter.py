@@ -1,8 +1,16 @@
 """OpenRouter API client for making LLM requests."""
 
+import asyncio
 import httpx
 from typing import List, Dict, Any, Optional
 from .config import OPENROUTER_API_KEY, OPENROUTER_API_URL
+
+# Retry transient failures. The Fly backend auto-stops when idle, so the first
+# burst of parallel calls after a cold start can intermittently fail; a couple
+# of retries with light backoff turns those into successes instead of a
+# user-facing "all thinkers failed".
+MAX_ATTEMPTS = 3
+RETRY_BACKOFF = 1.5  # seconds, multiplied by attempt number
 
 
 async def query_model(
@@ -11,7 +19,7 @@ async def query_model(
     timeout: float = 120.0
 ) -> Optional[Dict[str, Any]]:
     """
-    Query a single model via OpenRouter API.
+    Query a single model via OpenRouter API, retrying transient failures.
 
     Args:
         model: OpenRouter model identifier (e.g., "openai/gpt-4o")
@@ -31,26 +39,33 @@ async def query_model(
         "messages": messages,
     }
 
-    try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            response = await client.post(
-                OPENROUTER_API_URL,
-                headers=headers,
-                json=payload
-            )
-            response.raise_for_status()
+    last_error: Optional[str] = None
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                response = await client.post(
+                    OPENROUTER_API_URL,
+                    headers=headers,
+                    json=payload
+                )
+                response.raise_for_status()
 
-            data = response.json()
-            message = data['choices'][0]['message']
+                data = response.json()
+                message = data['choices'][0]['message']
 
-            return {
-                'content': message.get('content'),
-                'reasoning_details': message.get('reasoning_details')
-            }
+                return {
+                    'content': message.get('content'),
+                    'reasoning_details': message.get('reasoning_details')
+                }
 
-    except Exception as e:
-        print(f"Error querying model {model}: {e}")
-        return None
+        except Exception as e:
+            # Surface a useful error (the bare str(e) is often empty).
+            last_error = repr(e)
+            if attempt < MAX_ATTEMPTS:
+                await asyncio.sleep(RETRY_BACKOFF * attempt)
+
+    print(f"Error querying model {model} after {MAX_ATTEMPTS} attempts: {last_error}")
+    return None
 
 
 async def query_models_parallel(
