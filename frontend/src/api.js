@@ -1,15 +1,56 @@
 /**
- * API client for the LLM Council backend.
+ * API client for the LinkedIn Council backend.
  */
 
-const API_BASE = 'http://localhost:8001';
+// Backend URL. In production set VITE_API_BASE (e.g. https://council-api.fly.dev).
+// Falls back to the local backend for development.
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8001';
+
+const PASSWORD_KEY = 'council_password';
+
+export function getPassword() {
+  return localStorage.getItem(PASSWORD_KEY) || '';
+}
+
+export function setPassword(value) {
+  if (value) {
+    localStorage.setItem(PASSWORD_KEY, value);
+  } else {
+    localStorage.removeItem(PASSWORD_KEY);
+  }
+}
+
+// Build headers, attaching the shared password if we have one stored.
+function headers(extra = {}) {
+  const h = { ...extra };
+  const pw = getPassword();
+  if (pw) {
+    h['X-Council-Password'] = pw;
+  }
+  return h;
+}
 
 export const api = {
+  /**
+   * Validate the stored password against the backend without spending anything.
+   * Returns true if the gate is satisfied (or disabled), false on 401.
+   */
+  async checkAuth() {
+    const response = await fetch(`${API_BASE}/api/auth/check`, {
+      headers: headers(),
+    });
+    if (response.status === 401) return false;
+    if (!response.ok) throw new Error('Auth check failed');
+    return true;
+  },
+
   /**
    * List all conversations.
    */
   async listConversations() {
-    const response = await fetch(`${API_BASE}/api/conversations`);
+    const response = await fetch(`${API_BASE}/api/conversations`, {
+      headers: headers(),
+    });
     if (!response.ok) {
       throw new Error('Failed to list conversations');
     }
@@ -22,9 +63,7 @@ export const api = {
   async createConversation() {
     const response = await fetch(`${API_BASE}/api/conversations`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: headers({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({}),
     });
     if (!response.ok) {
@@ -38,7 +77,8 @@ export const api = {
    */
   async getConversation(conversationId) {
     const response = await fetch(
-      `${API_BASE}/api/conversations/${conversationId}`
+      `${API_BASE}/api/conversations/${conversationId}`,
+      { headers: headers() }
     );
     if (!response.ok) {
       throw new Error('Failed to get conversation');
@@ -54,9 +94,7 @@ export const api = {
       `${API_BASE}/api/conversations/${conversationId}/message`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ content }),
       }
     );
@@ -78,9 +116,7 @@ export const api = {
       `${API_BASE}/api/conversations/${conversationId}/message/stream`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ content }),
       }
     );

@@ -8,6 +8,20 @@ load_dotenv()
 # OpenRouter API key
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
+# Shared password gate. If unset/empty, the gate is OFF (local dev).
+# In production set COUNCIL_PASSWORD so strangers can't spend your credits.
+COUNCIL_PASSWORD = os.getenv("COUNCIL_PASSWORD")
+
+# Comma-separated list of allowed CORS origins. Defaults to local dev.
+# In production set e.g. ALLOWED_ORIGINS="https://council.shreevaidya.com"
+ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.getenv(
+        "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
+    ).split(",")
+    if o.strip()
+]
+
 # Council members - list of OpenRouter model identifiers
 COUNCIL_MODELS = [
     "openai/gpt-5.1",

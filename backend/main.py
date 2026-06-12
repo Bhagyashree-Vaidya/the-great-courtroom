@@ -1,27 +1,36 @@
 """FastAPI backend for LLM Council."""
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import uuid
 import json
 import asyncio
 
 from . import storage
+from .config import COUNCIL_PASSWORD, ALLOWED_ORIGINS
 from .council import run_full_council, generate_conversation_title, stage1_collect_responses, stage2_collect_rankings, stage3_synthesize_final, calculate_aggregate_rankings
 
-app = FastAPI(title="LLM Council API")
+app = FastAPI(title="LinkedIn Council API")
 
-# Enable CORS for local development
+# Enable CORS. Origins are configurable via ALLOWED_ORIGINS env var.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def require_password(x_council_password: Optional[str] = Header(default=None)):
+    """Shared-password gate. No-op when COUNCIL_PASSWORD is unset (local dev)."""
+    if not COUNCIL_PASSWORD:
+        return
+    if x_council_password != COUNCIL_PASSWORD:
+        raise HTTPException(status_code=401, detail="Invalid or missing password")
 
 
 class CreateConversationRequest(BaseModel):
@@ -52,17 +61,25 @@ class Conversation(BaseModel):
 
 @app.get("/")
 async def root():
-    """Health check endpoint."""
-    return {"status": "ok", "service": "LLM Council API"}
+    """Health check endpoint (open, so the host can probe it)."""
+    return {"status": "ok", "service": "LinkedIn Council API"}
 
 
-@app.get("/api/conversations", response_model=List[ConversationMetadata])
+@app.get("/api/auth/check")
+async def auth_check(_: None = Depends(require_password)):
+    """Validate a password without spending anything. 200 if OK, 401 if not."""
+    return {"ok": True, "gate_enabled": bool(COUNCIL_PASSWORD)}
+
+
+@app.get("/api/conversations", response_model=List[ConversationMetadata],
+         dependencies=[Depends(require_password)])
 async def list_conversations():
     """List all conversations (metadata only)."""
     return storage.list_conversations()
 
 
-@app.post("/api/conversations", response_model=Conversation)
+@app.post("/api/conversations", response_model=Conversation,
+          dependencies=[Depends(require_password)])
 async def create_conversation(request: CreateConversationRequest):
     """Create a new conversation."""
     conversation_id = str(uuid.uuid4())
@@ -70,7 +87,8 @@ async def create_conversation(request: CreateConversationRequest):
     return conversation
 
 
-@app.get("/api/conversations/{conversation_id}", response_model=Conversation)
+@app.get("/api/conversations/{conversation_id}", response_model=Conversation,
+         dependencies=[Depends(require_password)])
 async def get_conversation(conversation_id: str):
     """Get a specific conversation with all its messages."""
     conversation = storage.get_conversation(conversation_id)
@@ -79,7 +97,8 @@ async def get_conversation(conversation_id: str):
     return conversation
 
 
-@app.post("/api/conversations/{conversation_id}/message")
+@app.post("/api/conversations/{conversation_id}/message",
+          dependencies=[Depends(require_password)])
 async def send_message(conversation_id: str, request: SendMessageRequest):
     """
     Send a message and run the 3-stage council process.
@@ -123,7 +142,8 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
     }
 
 
-@app.post("/api/conversations/{conversation_id}/message/stream")
+@app.post("/api/conversations/{conversation_id}/message/stream",
+          dependencies=[Depends(require_password)])
 async def send_message_stream(conversation_id: str, request: SendMessageRequest):
     """
     Send a message and stream the 3-stage council process.
