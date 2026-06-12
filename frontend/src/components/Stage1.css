@@ -40,9 +40,9 @@
 }
 
 .tab.active {
-  background: var(--terracotta);
+  background: var(--sage-deep);
   color: var(--paper-card);
-  border-color: var(--terracotta);
+  border-color: var(--rose-deep);
   font-weight: 600;
 }
 
@@ -54,7 +54,7 @@
 }
 
 .model-name {
-  color: var(--terracotta);
+  color: var(--rose-deep);
   font-family: var(--font-serif);
   font-size: 1.05rem;
   font-weight: 600;
