@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import './Sidebar.css';
 
 export default function Sidebar({
@@ -6,19 +5,21 @@ export default function Sidebar({
   currentConversationId,
   onSelectConversation,
   onNewConversation,
+  onLogout,
 }) {
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h1>LinkedIn Council</h1>
+        <h1 className="sidebar-brand">The Council</h1>
+        <p className="sidebar-tagline">Five perspectives, one decision</p>
         <button className="new-conversation-btn" onClick={onNewConversation}>
-          + New Conversation
+          + New decision
         </button>
       </div>
 
       <div className="conversation-list">
         {conversations.length === 0 ? (
-          <div className="no-conversations">No conversations yet</div>
+          <div className="no-conversations">No decisions yet</div>
         ) : (
           conversations.map((conv) => (
             <div
@@ -29,7 +30,7 @@ export default function Sidebar({
               onClick={() => onSelectConversation(conv.id)}
             >
               <div className="conversation-title">
-                {conv.title || 'New Conversation'}
+                {conv.title || 'New decision'}
               </div>
               <div className="conversation-meta">
                 {conv.message_count} messages
@@ -37,6 +38,12 @@ export default function Sidebar({
             </div>
           ))
         )}
+      </div>
+
+      <div className="sidebar-footer">
+        <button className="logout-btn" onClick={onLogout}>
+          Log out
+        </button>
       </div>
     </div>
   );

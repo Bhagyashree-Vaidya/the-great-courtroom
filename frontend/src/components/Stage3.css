@@ -1,25 +1,31 @@
 .stage3 {
-  background: #f0fff0;
-  border-color: #c8e6c8;
+  background: linear-gradient(180deg, #eef1ea 0%, var(--paper-card) 60%);
+  border-color: var(--sage);
+}
+
+.stage3 .stage-title {
+  color: var(--brown);
 }
 
 .final-response {
-  background: #ffffff;
-  padding: 20px;
-  border-radius: 6px;
-  border: 1px solid #c8e6c8;
+  background: var(--paper-card);
+  padding: 26px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--sage);
+  box-shadow: var(--shadow-sm);
 }
 
 .chairman-label {
-  color: #2d8a2d;
-  font-size: 12px;
-  font-family: monospace;
-  margin-bottom: 12px;
+  color: var(--terracotta);
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  margin-bottom: 14px;
   font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .final-text {
-  color: #333;
-  line-height: 1.7;
-  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.75;
+  font-size: 1.02rem;
 }

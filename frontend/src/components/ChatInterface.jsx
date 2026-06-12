@@ -41,8 +41,8 @@ export default function ChatInterface({
     return (
       <div className="chat-interface">
         <div className="empty-state">
-          <h2>Welcome to LinkedIn Council</h2>
-          <p>Create a new conversation to get started</p>
+          <h2>Welcome to the Council</h2>
+          <p>Start a new decision and five thinkers will weigh in</p>
         </div>
       </div>
     );
@@ -53,8 +53,8 @@ export default function ChatInterface({
       <div className="messages-container">
         {conversation.messages.length === 0 ? (
           <div className="empty-state">
-            <h2>Optimize a draft</h2>
-            <p>Paste a LinkedIn draft and the council will critique and rewrite it</p>
+            <h2>What are you deciding?</h2>
+            <p>Describe the decision you're weighing. The Contrarian, the First Principles Thinker, the Expansionist, the Outsider, and the Skeptic will each weigh in, then the Council synthesizes a balanced view.</p>
           </div>
         ) : (
           conversation.messages.map((msg, index) => (
@@ -70,13 +70,13 @@ export default function ChatInterface({
                 </div>
               ) : (
                 <div className="assistant-message">
-                  <div className="message-label">LinkedIn Council</div>
+                  <div className="message-label">The Council</div>
 
                   {/* Stage 1 */}
                   {msg.loading?.stage1 && (
                     <div className="stage-loading">
                       <div className="spinner"></div>
-                      <span>Running Stage 1: Collecting critiques...</span>
+                      <span>The five thinkers are weighing in...</span>
                     </div>
                   )}
                   {msg.stage1 && <Stage1 responses={msg.stage1} />}
@@ -85,7 +85,7 @@ export default function ChatInterface({
                   {msg.loading?.stage2 && (
                     <div className="stage-loading">
                       <div className="spinner"></div>
-                      <span>Running Stage 2: Peer rankings...</span>
+                      <span>The thinkers are ranking each other's takes...</span>
                     </div>
                   )}
                   {msg.stage2 && (
@@ -100,7 +100,7 @@ export default function ChatInterface({
                   {msg.loading?.stage3 && (
                     <div className="stage-loading">
                       <div className="spinner"></div>
-                      <span>Running Stage 3: Final synthesis...</span>
+                      <span>The Council is reaching a verdict...</span>
                     </div>
                   )}
                   {msg.stage3 && <Stage3 finalResponse={msg.stage3} />}
@@ -113,7 +113,7 @@ export default function ChatInterface({
         {isLoading && (
           <div className="loading-indicator">
             <div className="spinner"></div>
-            <span>Consulting the council...</span>
+            <span>Convening the council...</span>
           </div>
         )}
 
@@ -124,7 +124,7 @@ export default function ChatInterface({
         <form className="input-form" onSubmit={handleSubmit}>
           <textarea
             className="message-input"
-            placeholder="Paste your LinkedIn draft here"
+            placeholder="Describe the decision you're weighing..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
