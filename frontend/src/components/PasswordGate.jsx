@@ -1,7 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import confetti from 'canvas-confetti';
 import { api, setPassword } from '../api';
 import './PasswordGate.css';
+
+// three.js is heavy; only pull it in when the locked landing actually shows.
+const AnyaPeek = lazy(() => import('./AnyaPeek'));
 
 const THINKERS = [
   {
@@ -131,6 +134,8 @@ export default function PasswordGate({ children }) {
   const [submitting, setSubmitting] = useState(false);
   const [mood, setMood] = useState('neutral'); // neutral | shocked | happy
   const [shake, setShake] = useState(false);
+  const [modelFailed, setModelFailed] = useState(false);
+  const lookTargetRef = useRef(null); // {x, y} the character looks at
   const loginRef = useRef(null);
   const cardRef = useRef(null);
   const inputRef = useRef(null);
@@ -197,19 +202,28 @@ export default function PasswordGate({ children }) {
 
     const onPointerMove = (e) => {
       lastPointer = { x: e.clientX, y: e.clientY };
-      if (!focused()) lookAt(e.clientX, e.clientY);
+      if (!focused()) {
+        lookTargetRef.current = lastPointer;
+        lookAt(e.clientX, e.clientY);
+      }
     };
 
     const onCaret = () => {
       if (!focused()) return;
       requestAnimationFrame(() => {
         const pt = caretPoint();
-        if (pt) lookAt(pt.x, pt.y);
+        if (pt) {
+          lookTargetRef.current = pt;
+          lookAt(pt.x, pt.y);
+        }
       });
     };
 
     const onBlur = () => {
-      if (lastPointer) lookAt(lastPointer.x, lastPointer.y);
+      if (lastPointer) {
+        lookTargetRef.current = lastPointer;
+        lookAt(lastPointer.x, lastPointer.y);
+      }
     };
 
     document.addEventListener('pointermove', onPointerMove);
@@ -341,15 +355,25 @@ export default function PasswordGate({ children }) {
             onSubmit={handleSubmit}
             onAnimationEnd={() => setShake(false)}
           >
-            <LoginFace
-              mood={mood}
-              leftEyeRef={leftEyeRef}
-              rightEyeRef={rightEyeRef}
-              leftPupilRef={leftPupilRef}
-              rightPupilRef={rightPupilRef}
-            />
             <h2>Enter the council</h2>
             <p className="login-sub">This is a private room. Sign in to begin.</p>
+            {!modelFailed ? (
+              <Suspense fallback={<div className="anya-peek" />}>
+                <AnyaPeek
+                  mood={mood}
+                  lookTargetRef={lookTargetRef}
+                  onLoadError={() => setModelFailed(true)}
+                />
+              </Suspense>
+            ) : (
+              <LoginFace
+                mood={mood}
+                leftEyeRef={leftEyeRef}
+                rightEyeRef={rightEyeRef}
+                leftPupilRef={leftPupilRef}
+                rightPupilRef={rightPupilRef}
+              />
+            )}
             <input
               ref={inputRef}
               type="password"
