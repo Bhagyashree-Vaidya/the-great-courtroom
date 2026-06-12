@@ -1,38 +1,44 @@
-# CLAUDE.md - Technical Notes for LinkedIn Council
+# CLAUDE.md - Technical Notes for The Council
 
 This file contains technical details, architectural decisions, and important implementation notes for future development sessions.
 
 ## Project Overview
 
-**LinkedIn Council** is a fork of karpathy/llm-council, converted from a general Q&A council into a LinkedIn post optimizer. The user pastes a draft post; the 3-stage deliberation pipeline critiques and rewrites it:
+**The Council** is a fork of karpathy/llm-council, reframed into a **decision-making council**. (It was briefly a LinkedIn post optimizer; that earlier framing is fully replaced.) The user describes a decision they are weighing; five "thinker" personas react, peer-rank each other, and the Council synthesizes a balanced verdict:
 
-- **Stage 1**: Each council model critiques the draft on four dimensions (Hook scored 1-10 with 2 alternative openers, Voice flagging AI/corporate-speak with quoted lines, Structure/mobile scannability, and Audience as seen by a tech recruiter evaluating a PM/TPM/SWE candidate), then ends with its own rewrite.
-- **Stage 2**: Anonymized peer ranking, ranked on critique usefulness, specificity (quoted lines beat vague advice), and rewrite quality.
-- **Stage 3**: The Chairman outputs a consensus summary (3-4 sentences), one final optimized post, and a before/after score out of 10.
+- **Stage 1**: Five personas each react in their own voice — **The Contrarian** ("what if everyone is wrong?"), **The First Principles Thinker** (rebuild from base facts), **The Expansionist** (the bigger move nobody listed), **The Outsider** (fresh eyes, naive-but-sharp questions), **The Skeptic** (risks and failure modes). Each gives a read, the questions they'd ask, and where they land.
+- **Stage 2**: Anonymized peer ranking on usefulness, specificity, and fresh perspective.
+- **Stage 3**: **The Council** outputs three sections — where the thinkers agreed/disagreed (3-4 sentences), the balanced view, and the 2-3 deciding questions. It never decides for the user.
 
-The architecture is unchanged from upstream. Only prompts, model config, and UI copy changed.
+The 3-stage architecture and the anonymized Stage-2 peer review are unchanged from upstream.
+
+## Personas: model vs identity (important)
+
+Identity in the pipeline is the **persona** (`key`/`name`), NOT the model string. This is what lets five personas run on four paid models — two personas (First Principles + Skeptic) both use `openai/gpt-5.1` with different persona system prompts. Everything (Stage 1/2 results, `label_to_*` mapping, aggregate rankings) is keyed by persona, so shared models do not collide. `council.py` queries each member with `asyncio.gather` rather than the old model-keyed `query_models_parallel`.
 
 ## Editing the Prompts
 
 **All prompts live in `backend/prompts.py`** — one clearly marked place for hand-tuning:
 
-- `HARD_RULES` — injected into every stage. **The no-em-dash rule lives here**: rewrites must contain ZERO em dashes, no AI-sounding phrases ("thrilled to announce", "humbled", "delve", "leverage", "game-changer", etc.), contractions and short punchy sentences are good, and rewrites should sound like a real person thinking out loud.
-- `STAGE1_CRITIQUE_PROMPT` — the four-dimension critique. Edit this to change tone or add reference posts ("sounds like Shree" examples).
+- `OUTPUT_RULES` — injected into every stage. **The no-em-dash rule lives here** (ZERO em dashes), plus the no-AI-filler list and "plain human language / be concrete / you are helping a person think, not deciding for them".
+- `PERSONAS` — a dict of the five thinkers. Edit a persona's `instructions` to change how it reasons. **Keys must match `config.COUNCIL_MEMBERS`** (a startup assert-style smoke test in council import will surface a mismatch).
+- `STAGE1_PERSONA_PROMPT` — the per-thinker reaction template (placeholders: `persona`, `decision`, `output_rules`).
 - `STAGE2_RANKING_PROMPT` — ranking criteria. **Do not change the "FINAL RANKING:" format block**; `council.parse_ranking_from_text()` parses it.
-- `STAGE3_CHAIRMAN_PROMPT` — final synthesis structure.
+- `STAGE3_COUNCIL_PROMPT` — final synthesis structure.
 - `TITLE_PROMPT` — conversation title generation.
-
-The key innovation from upstream remains: anonymized peer review in Stage 2, preventing models from playing favorites.
 
 ## Architecture
 
 ### Backend Structure (`backend/`)
 
 **`config.py`**
-- Contains `COUNCIL_MODELS` (list of OpenRouter model identifiers)
-- Contains `CHAIRMAN_MODEL` (model that synthesizes final answer)
+- `COUNCIL_MEMBERS` — list of `{key, name, model}` persona dicts (the source of truth). `COUNCIL_MODELS` is derived from it for back-compat.
+- `CHAIRMAN_MODEL` — the model behind "The Council" synthesis (Stage 3).
+- `COUNCIL_PASSWORD` / `ALLOWED_ORIGINS` — production gate + CORS (env vars; unset locally = ungated).
 - Uses environment variable `OPENROUTER_API_KEY` from `.env`
-- Backend runs on **port 8001** (NOT 8000 - user had another app on 8000)
+- Backend runs on **port 8001** locally (Fly serves it on 8080 via the Dockerfile).
+- `openrouter.query_model` retries transient failures (`MAX_ATTEMPTS`) — added because Fly cold starts can fail the first parallel burst.
+- Deploy: backend on Fly (`linkedin-council-api`), frontend on Vercel (`council.shreevaidya.com`). See `DEPLOY.md`.
 
 **`openrouter.py`**
 - `query_model()`: Single async model query

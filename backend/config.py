@@ -22,15 +22,22 @@ ALLOWED_ORIGINS = [
     if o.strip()
 ]
 
-# Council members - list of OpenRouter model identifiers
-COUNCIL_MODELS = [
-    "openai/gpt-5.1",
-    "google/gemini-3.1-pro-preview",
-    "anthropic/claude-sonnet-4.5",
-    "x-ai/grok-4.3",
+# Council members. Each member is one "thinker" persona backed by a model.
+# Identity is the persona `key`/`name`, NOT the model, so two personas may
+# share a model (cheap, and the persona prompts make them think differently).
+# The persona instructions themselves live in backend/prompts.py (PERSONAS).
+COUNCIL_MEMBERS = [
+    {"key": "contrarian",        "name": "The Contrarian",              "model": "x-ai/grok-4.3"},
+    {"key": "first_principles",  "name": "The First Principles Thinker", "model": "openai/gpt-5.1"},
+    {"key": "expansionist",      "name": "The Expansionist",            "model": "google/gemini-3.1-pro-preview"},
+    {"key": "outsider",          "name": "The Outsider",                "model": "anthropic/claude-sonnet-4.5"},
+    {"key": "skeptic",           "name": "The Skeptic",                 "model": "openai/gpt-5.1"},
 ]
 
-# Chairman model - synthesizes final response
+# Backwards-compatible list of model ids (some tooling may still read this).
+COUNCIL_MODELS = [m["model"] for m in COUNCIL_MEMBERS]
+
+# Chairman model - the Council that synthesizes the final balanced verdict.
 CHAIRMAN_MODEL = "anthropic/claude-sonnet-4.5"
 
 # OpenRouter API endpoint
