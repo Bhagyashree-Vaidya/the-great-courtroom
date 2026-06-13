@@ -16,7 +16,9 @@ RETRY_BACKOFF = 1.5  # seconds, multiplied by attempt number
 async def query_model(
     model: str,
     messages: List[Dict[str, str]],
-    timeout: float = 120.0
+    timeout: float = 90.0,
+    max_tokens: Optional[int] = 1100,
+    reasoning_effort: Optional[str] = "low",
 ) -> Optional[Dict[str, Any]]:
     """
     Query a single model via OpenRouter API, retrying transient failures.
@@ -25,6 +27,10 @@ async def query_model(
         model: OpenRouter model identifier (e.g., "openai/gpt-4o")
         messages: List of message dicts with 'role' and 'content'
         timeout: Request timeout in seconds
+        max_tokens: Cap on generated tokens. Without this, reasoning models
+            (gpt-5.1, gemini-3-pro, grok) can run for minutes. None = uncapped.
+        reasoning_effort: "low"/"medium"/"high" for reasoning models. "low" is
+            far faster and plenty here. None = omit (let the model decide).
 
     Returns:
         Response dict with 'content' and optional 'reasoning_details', or None if failed
@@ -38,6 +44,11 @@ async def query_model(
         "model": model,
         "messages": messages,
     }
+    if max_tokens is not None:
+        payload["max_tokens"] = max_tokens
+    if reasoning_effort is not None:
+        # OpenRouter normalizes this across providers (OpenAI, Google, xAI...).
+        payload["reasoning"] = {"effort": reasoning_effort}
 
     last_error: Optional[str] = None
     for attempt in range(1, MAX_ATTEMPTS + 1):

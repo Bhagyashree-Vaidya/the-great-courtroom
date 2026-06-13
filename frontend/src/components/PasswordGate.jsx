@@ -350,7 +350,7 @@ export default function PasswordGate({ children }) {
           <p className="tagline">Don't suck at decision making</p>
           <p className="hero-lede">
             Most decisions are not short on opinions. They're short on
-            perspective. This council brings together five different ways of
+            perspective. This courtroom brings together five different ways of
             thinking before a decision is made.
           </p>
         </header>
@@ -359,9 +359,11 @@ export default function PasswordGate({ children }) {
           {THINKERS.map((t, i) => (
             <article className="thinker-card" key={t.key}>
               <span className="thinker-num">{String(i + 1).padStart(2, '0')}</span>
-              {poses?.[t.key] && (
-                <img className="thinker-pose" src={poses[t.key]} alt="" />
-              )}
+              <div className="thinker-pose">
+                {poses?.[t.key] && (
+                  <img className="thinker-pose-img" src={poses[t.key]} alt="" />
+                )}
+              </div>
               <h3>{t.name}</h3>
               <p>{t.line}</p>
             </article>
@@ -371,9 +373,9 @@ export default function PasswordGate({ children }) {
         <hr className="paper-rule" />
 
         <section className="council-note">
-          <h2>Then the Council steps in.</h2>
+          <h2>Then the Courtroom steps in.</h2>
           <p>
-            Instead of relying on a single answer, the council reviews every
+            Instead of relying on a single answer, the courtroom reviews every
             perspective, debates the tradeoffs, and helps you reach a more
             balanced decision.
           </p>

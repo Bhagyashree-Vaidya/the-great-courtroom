@@ -132,7 +132,8 @@ async def stage3_synthesize_final(
     )
     messages = [{"role": "user", "content": council_prompt}]
 
-    response = await query_model(CHAIRMAN_MODEL, messages)
+    # The verdict is the payoff, so give it more room than the other stages.
+    response = await query_model(CHAIRMAN_MODEL, messages, max_tokens=1800)
 
     if response is None:
         return {
@@ -209,7 +210,10 @@ async def generate_conversation_title(user_query: str) -> str:
     title_prompt = TITLE_PROMPT.format(decision=user_query)
     messages = [{"role": "user", "content": title_prompt}]
 
-    response = await query_model("google/gemini-2.5-flash", messages, timeout=30.0)
+    response = await query_model(
+        "google/gemini-2.5-flash", messages, timeout=30.0,
+        max_tokens=30, reasoning_effort=None,
+    )
 
     if response is None:
         return "New Decision"
