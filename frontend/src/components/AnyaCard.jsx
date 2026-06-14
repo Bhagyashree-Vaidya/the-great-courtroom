@@ -8,32 +8,102 @@ import { loadAnya, makeAnya, addAnyaLights } from '../anyaModel';
  * Pauses rendering while off screen (IntersectionObserver) to spare the GPU.
  */
 
-// Base head/body pose + per-frame idle motion for each persona.
+// Base head/body pose + per-frame idle motion + a recognizable prop, chosen so
+// each card is obviously different even in a still frame. Strong angles because
+// the model has no facial morphs to differentiate expressions.
 const PERSONA = {
+  // Turned away over the shoulder, arms-crossed body twist: "prove it."
   contrarian: {
-    base: { head: [-0.06, 0.45, 0.05], body: -0.18, squint: 0.25 },
-    idle: (t, p) => { p.head.y = 0.45 + Math.sin(t * 0.8) * 0.3; },     // skeptical "no" sweep
+    base: { head: [-0.05, 0.75, 0.12], body: -0.5 },
+    idle: (t, p) => { p.head.y = 0.75 + Math.sin(t * 0.8) * 0.12; },
+    prop: 'cross',
   },
+  // Head down, studying a little stack of blocks (rebuild from basics).
   first_principles: {
-    base: { head: [0.26, -0.12, 0.12], body: 0.1, squint: 0.18 },
-    idle: (t, p) => { p.head.x = 0.26 + Math.sin(t * 1.1) * 0.1; },     // thoughtful nod
+    base: { head: [0.45, -0.1, 0.05], body: 0.12 },
+    idle: (t, p) => { p.head.x = 0.45 + Math.sin(t * 1.0) * 0.07; },
+    prop: 'blocks',
   },
+  // Gazing up and out at floating sparks of possibility.
   expansionist: {
-    base: { head: [-0.16, 0.0, 0.0], body: 0.08, squint: 0 },
-    idle: (t, p) => {                                                    // scanning the horizon
-      p.head.y = Math.sin(t * 0.6) * 0.5;
-      p.head.x = -0.16 + Math.cos(t * 0.9) * 0.08;
+    base: { head: [-0.4, 0.18, -0.05], body: 0.18 },
+    idle: (t, p) => {
+      p.head.y = 0.18 + Math.sin(t * 0.6) * 0.28;
+      p.head.x = -0.4 + Math.cos(t * 0.9) * 0.06;
     },
+    prop: 'sparks',
   },
+  // Front and center, holding a mic out for the interview.
   outsider: {
-    base: { head: [0.05, -0.18, 0], body: 0.06, squint: 0, mic: true },
-    idle: (t, p) => { p.head.x = 0.05 + Math.abs(Math.sin(t * 1.4)) * 0.09; }, // attentive bob
+    base: { head: [0.06, -0.12, 0], body: 0.04 },
+    idle: (t, p) => { p.head.x = 0.06 + Math.abs(Math.sin(t * 1.4)) * 0.08; },
+    prop: 'mic',
   },
+  // Hard head tilt + a magnifying glass: stress-testing for cracks.
   skeptic: {
-    base: { head: [0.06, -0.22, -0.18], body: 0.14, squint: 0.5 },
-    idle: (t, p) => { p.head.z = -0.18 + Math.sin(t * 0.9) * 0.07; },   // unconvinced sway
+    base: { head: [0.1, -0.35, -0.38], body: 0.2 },
+    idle: (t, p) => { p.head.z = -0.38 + Math.sin(t * 0.9) * 0.06; },
+    prop: 'magnifier',
   },
 };
+
+function buildProp(kind) {
+  const g = new THREE.Group();
+  const dark = new THREE.MeshStandardMaterial({ color: 0x3b332b, roughness: 0.6 });
+  if (kind === 'mic') {
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.6, 16), dark);
+    const foam = new THREE.Mesh(
+      new THREE.SphereGeometry(0.14, 20, 16),
+      new THREE.MeshStandardMaterial({ color: 0x7b6758, roughness: 0.9 })
+    );
+    foam.position.y = 0.34;
+    g.add(handle, foam);
+    g.position.set(0.6, -0.55, 1.2);
+    g.rotation.z = -0.4;
+  } else if (kind === 'magnifier') {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(0.26, 0.05, 12, 28),
+      new THREE.MeshStandardMaterial({ color: 0x7b6758, roughness: 0.6 })
+    );
+    const glass = new THREE.Mesh(
+      new THREE.CircleGeometry(0.24, 28),
+      new THREE.MeshStandardMaterial({ color: 0xbcd6e0, transparent: true, opacity: 0.4, roughness: 0.2 })
+    );
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.34, 12), dark);
+    handle.position.set(0.2, -0.32, 0);
+    handle.rotation.z = -0.8;
+    g.add(ring, glass, handle);
+    g.position.set(0.78, -0.05, 1.4);
+  } else if (kind === 'blocks') {
+    const colors = [0xc98e72, 0xb8c4b1, 0xd8b7b1];
+    for (let i = 0; i < 3; i++) {
+      const cube = new THREE.Mesh(
+        new THREE.BoxGeometry(0.28, 0.28, 0.28),
+        new THREE.MeshStandardMaterial({ color: colors[i], roughness: 0.7 })
+      );
+      cube.position.set(-0.05 + (i % 2) * 0.1, -0.7 + i * 0.29, 1.3);
+      cube.rotation.y = 0.4 + i * 0.2;
+      g.add(cube);
+    }
+    g.position.set(0.7, 0, 0);
+  } else if (kind === 'sparks') {
+    const mat = new THREE.MeshStandardMaterial({ color: 0xc98e72, emissive: 0x7b6758, roughness: 0.5 });
+    [[0.7, 1.3, 1.1, 0.09], [1.0, 0.9, 1.0, 0.06], [0.5, 0.95, 1.2, 0.05]].forEach(([x, y, z, r]) => {
+      const s = new THREE.Mesh(new THREE.OctahedronGeometry(r), mat);
+      s.position.set(x, y, z);
+      g.add(s);
+    });
+  } else if (kind === 'cross') {
+    // small "no / opposed" mark: two crossed bars
+    const bar = () => new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.42, 0.07),
+      new THREE.MeshStandardMaterial({ color: 0xc98e72, roughness: 0.6 }));
+    const a = bar(); a.rotation.z = 0.78;
+    const b = bar(); b.rotation.z = -0.78;
+    g.add(a, b);
+    g.position.set(0.85, 0.7, 1.2);
+  }
+  return g;
+}
 
 export default function AnyaCard({ poseKey }) {
   const mountRef = useRef(null);
@@ -104,29 +174,10 @@ export default function AnyaCard({ poseKey }) {
         group.position.set(-center.x * scale, -center.y * scale - 1.05, -center.z * scale);
         baseY = group.position.y;
 
-        if (eye) eye.scale.y = 1 - (persona.base.squint || 0) * 0.5;
-
-        if (persona.base.mic) addMic(scene);
+        if (persona.prop) scene.add(buildProp(persona.prop));
         renderer.render(scene, camera); // one immediate frame
       })
       .catch(() => {});
-
-    function addMic(scn) {
-      const mic = new THREE.Group();
-      const handle = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.05, 0.06, 0.6, 16),
-        new THREE.MeshStandardMaterial({ color: 0x3b332b, roughness: 0.6 })
-      );
-      const foam = new THREE.Mesh(
-        new THREE.SphereGeometry(0.13, 20, 16),
-        new THREE.MeshStandardMaterial({ color: 0x7b6758, roughness: 0.9 })
-      );
-      foam.position.y = 0.34;
-      mic.add(handle, foam);
-      mic.position.set(0.6, -0.5, 1.0);
-      mic.rotation.z = -0.4;
-      scn.add(mic);
-    }
 
     const animate = () => {
       frameId = requestAnimationFrame(animate);
