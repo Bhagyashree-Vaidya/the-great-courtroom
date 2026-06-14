@@ -37,31 +37,6 @@ const THINKERS = [
 
 const CONFETTI_COLORS = ['#b8c4b1', '#d8b7b1', '#c98e72', '#7b6758', '#f7f3eb'];
 
-/** A cute palm (skin tone) that slides up to cover an eye while you type. */
-function PeekHand({ side }) {
-  return (
-    <svg className={`peek-hand ${side}`} viewBox="0 0 100 120" aria-hidden="true">
-      <g
-        fill="#f4cdb6"
-        stroke="#d9a98f"
-        strokeWidth="3"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      >
-        <rect x="22" y="55" width="56" height="58" rx="22" />
-        <rect x="26" y="18" width="13" height="50" rx="6.5" />
-        <rect x="41" y="10" width="13" height="58" rx="6.5" />
-        <rect x="56" y="14" width="13" height="54" rx="6.5" />
-        <rect x="70" y="24" width="12" height="44" rx="6" />
-        <rect
-          x="11" y="60" width="13" height="34" rx="6.5"
-          transform="rotate(-28 18 77)"
-        />
-      </g>
-    </svg>
-  );
-}
-
 function burstAtElement(el) {
   if (!el) return;
   const rect = el.getBoundingClientRect();
@@ -167,7 +142,6 @@ export default function PasswordGate({ children }) {
   const [shake, setShake] = useState(false);
   const [modelFailed, setModelFailed] = useState(false);
   const [policyOpen, setPolicyOpen] = useState(false); // terms & privacy modal
-  const [covering, setCovering] = useState(false); // palms over eyes while typing
   const lookTargetRef = useRef(null); // {x, y} the character looks at
   const typingRef = useRef(false); // true while the password field is focused
   const loginRef = useRef(null);
@@ -425,30 +399,24 @@ export default function PasswordGate({ children }) {
           >
             <h2>Enter the courtroom</h2>
             <p className="login-sub">This is a private room. Sign in to begin.</p>
-            <div className={`anya-stage${covering ? ' covering' : ''}`}>
-              {!modelFailed ? (
-                <Suspense fallback={<div className="anya-peek" />}>
-                  <AnyaPeek
-                    mood={mood}
-                    lookTargetRef={lookTargetRef}
-                    typingRef={typingRef}
-                    onLoadError={() => setModelFailed(true)}
-                  />
-                </Suspense>
-              ) : (
-                <LoginFace
+            {!modelFailed ? (
+              <Suspense fallback={<div className="anya-peek" />}>
+                <AnyaPeek
                   mood={mood}
-                  leftEyeRef={leftEyeRef}
-                  rightEyeRef={rightEyeRef}
-                  leftPupilRef={leftPupilRef}
-                  rightPupilRef={rightPupilRef}
+                  lookTargetRef={lookTargetRef}
+                  typingRef={typingRef}
+                  onLoadError={() => setModelFailed(true)}
                 />
-              )}
-              <div className="peek-hands" aria-hidden="true">
-                <PeekHand side="left" />
-                <PeekHand side="right" />
-              </div>
-            </div>
+              </Suspense>
+            ) : (
+              <LoginFace
+                mood={mood}
+                leftEyeRef={leftEyeRef}
+                rightEyeRef={rightEyeRef}
+                leftPupilRef={leftPupilRef}
+                rightPupilRef={rightPupilRef}
+              />
+            )}
             <input
               ref={inputRef}
               type="password"
@@ -456,8 +424,8 @@ export default function PasswordGate({ children }) {
               placeholder="Password"
               value={input}
               onChange={handleInputChange}
-              onFocus={() => { typingRef.current = true; setCovering(true); }}
-              onBlur={() => { typingRef.current = false; setCovering(false); }}
+              onFocus={() => { typingRef.current = true; }}
+              onBlur={() => { typingRef.current = false; }}
               autoFocus
             />
             {error && <div className="login-error">{error}</div>}
