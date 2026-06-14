@@ -54,6 +54,7 @@ export default function AnyaPeek({ mood, lookTargetRef, typingRef, onLoadError }
     let prevMood = 'neutral';
     let baseY = 0;
     let handBaseRot = 0;
+    let coverAmt = 0; // 0 = idle, 1 = covering (typing); drives a playful tilt
 
     // Bottom edge of the visible frustum at the model plane (z≈0).
     const frustumHalfH = camera.position.z * Math.tan((camera.fov / 2) * (Math.PI / 180));
@@ -129,7 +130,6 @@ export default function AnyaPeek({ mood, lookTargetRef, typingRef, onLoadError }
 
     const clock = new THREE.Clock();
     const targetRot = { x: 0, y: 0 };
-    let smirk = 0; // 0..1 lerped typing intensity
 
     const animate = () => {
       frameId = requestAnimationFrame(animate);
@@ -157,9 +157,11 @@ export default function AnyaPeek({ mood, lookTargetRef, typingRef, onLoadError }
 
         const dt = clock.getDelta();
 
-        // Smirk while typing: squinted eyes + sly head tilt.
-        smirk += ((typing ? 1 : 0) - smirk) * 0.08;
-        if (eyeNode) eyeNode.scale.y = 1 - smirk * 0.45;
+        // While typing, the 2D palm overlay covers her eyes. Keep her eyes
+        // open (peeking) and pull her head toward center so the overlay lines
+        // up, with a playful tilt.
+        coverAmt += ((typing ? 1 : 0) - coverAmt) * 0.12;
+        if (eyeNode) eyeNode.scale.y = 1;
 
         if (shockT > 0) {
           shockT = Math.max(0, shockT - dt);
@@ -168,10 +170,12 @@ export default function AnyaPeek({ mood, lookTargetRef, typingRef, onLoadError }
             headNode.rotation.x = 0;
           }
         } else if (headNode) {
-          headNode.rotation.y += (targetRot.y - headNode.rotation.y) * 0.12;
-          headNode.rotation.x += (targetRot.x - headNode.rotation.x) * 0.12;
+          // Damp tracking toward center as she covers up.
+          const track = 1 - coverAmt * 0.85;
+          headNode.rotation.y += (targetRot.y * track - headNode.rotation.y) * 0.12;
+          headNode.rotation.x += (targetRot.x * track - headNode.rotation.x) * 0.12;
         }
-        if (headNode) headNode.rotation.z = smirk * 0.14;
+        if (headNode) headNode.rotation.z = coverAmt * 0.12;
 
         // Hands tap on the field: quicker while typing, lazy when idle.
         if (handNode) {
