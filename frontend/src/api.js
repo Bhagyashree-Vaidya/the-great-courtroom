@@ -104,22 +104,63 @@ export const api = {
     return response.json();
   },
 
-  /**
-   * Send a message and receive streaming updates.
-   * @param {string} conversationId - The conversation ID
-   * @param {string} content - The message content
-   * @param {function} onEvent - Callback function for each event: (eventType, data) => void
-   * @returns {Promise<void>}
-   */
-  async sendMessageStream(conversationId, content, onEvent) {
+  /** Delete a conversation (chat thread). */
+  async deleteConversation(conversationId) {
     const response = await fetch(
-      `${API_BASE}/api/conversations/${conversationId}/message/stream`,
+      `${API_BASE}/api/conversations/${conversationId}`,
+      { method: 'DELETE', headers: headers() }
+    );
+    if (!response.ok) throw new Error('Failed to delete conversation');
+    return response.json();
+  },
+
+  /** Rename a conversation. */
+  async renameConversation(conversationId, title) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}`,
+      {
+        method: 'PATCH',
+        headers: headers({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ title }),
+      }
+    );
+    if (!response.ok) throw new Error('Failed to rename conversation');
+    return response.json();
+  },
+
+  /** Drop messages from an index onward (edit / regenerate). */
+  async truncateConversation(conversationId, keepCount) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}/truncate`,
       {
         method: 'POST',
         headers: headers({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ keep_count: keepCount }),
       }
     );
+    if (!response.ok) throw new Error('Failed to truncate conversation');
+    return response.json();
+  },
+
+  /**
+   * Send a message and receive streaming updates.
+   * @param {string} conversationId
+   * @param {string} content
+   * @param {function} onEvent - (eventType, data) => void
+   * @param {object} [opts] - { signal?: AbortSignal, regenerate?: boolean }
+   * @returns {Promise<void>}
+   */
+  async sendMessageStream(conversationId, content, onEvent, opts = {}) {
+    const { signal, regenerate = false } = opts;
+    const url = `${API_BASE}/api/conversations/${conversationId}/message/stream${
+      regenerate ? '?regenerate=true' : ''
+    }`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: headers({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ content }),
+      signal,
+    });
 
     if (!response.ok) {
       throw new Error('Failed to send message');

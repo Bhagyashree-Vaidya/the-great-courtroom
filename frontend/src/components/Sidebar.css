@@ -67,6 +67,10 @@
 }
 
 .conversation-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 12px 14px;
   margin-bottom: 6px;
   border-radius: var(--radius-sm);
@@ -77,6 +81,71 @@
 
 .conversation-item:hover {
   background: rgba(252, 249, 243, 0.6);
+}
+
+.conversation-body { flex: 1; min-width: 0; }
+.conversation-body .conversation-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.conversation-menu-btn {
+  opacity: 0;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.conversation-item:hover .conversation-menu-btn,
+.conversation-item.active .conversation-menu-btn { opacity: 1; }
+.conversation-menu-btn:hover { background: var(--paper-beige); }
+
+.conversation-menu {
+  position: absolute;
+  top: 38px;
+  right: 8px;
+  z-index: 10;
+  background: var(--paper-card);
+  border: 1px solid var(--paper-edge);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+}
+
+.conversation-menu button {
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  color: var(--ink);
+}
+.conversation-menu button:hover { background: var(--paper-beige); }
+.conversation-menu button.danger { color: #a85440; }
+
+.rename-input {
+  flex: 1;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--rose-deep);
+  border-radius: 7px;
+  background: var(--paper-card);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  outline: none;
 }
 
 .conversation-item.active {

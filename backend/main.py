@@ -43,6 +43,16 @@ class SendMessageRequest(BaseModel):
     content: str
 
 
+class RenameRequest(BaseModel):
+    """Request to rename a conversation."""
+    title: str
+
+
+class TruncateRequest(BaseModel):
+    """Request to drop messages from an index onward (edit/regenerate)."""
+    keep_count: int
+
+
 class ConversationMetadata(BaseModel):
     """Conversation metadata for list view."""
     id: str
@@ -97,6 +107,37 @@ async def get_conversation(conversation_id: str):
     return conversation
 
 
+@app.delete("/api/conversations/{conversation_id}",
+            dependencies=[Depends(require_password)])
+async def delete_conversation(conversation_id: str):
+    """Delete a conversation (chat thread)."""
+    existed = storage.delete_conversation(conversation_id)
+    if not existed:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return {"ok": True}
+
+
+@app.patch("/api/conversations/{conversation_id}",
+           dependencies=[Depends(require_password)])
+async def rename_conversation(conversation_id: str, request: RenameRequest):
+    """Rename a conversation."""
+    if storage.get_conversation(conversation_id) is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    title = request.title.strip()[:80] or "New decision"
+    storage.update_conversation_title(conversation_id, title)
+    return {"ok": True, "title": title}
+
+
+@app.post("/api/conversations/{conversation_id}/truncate",
+          dependencies=[Depends(require_password)])
+async def truncate_conversation(conversation_id: str, request: TruncateRequest):
+    """Drop messages from an index onward (used by edit + regenerate)."""
+    if storage.get_conversation(conversation_id) is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    storage.truncate_messages(conversation_id, request.keep_count)
+    return {"ok": True}
+
+
 @app.post("/api/conversations/{conversation_id}/message",
           dependencies=[Depends(require_password)])
 async def send_message(conversation_id: str, request: SendMessageRequest):
@@ -144,18 +185,31 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
 
 @app.post("/api/conversations/{conversation_id}/message/stream",
           dependencies=[Depends(require_password)])
-async def send_message_stream(conversation_id: str, request: SendMessageRequest):
+async def send_message_stream(conversation_id: str, request: SendMessageRequest,
+                              regenerate: bool = False):
     """
     Send a message and stream the 3-stage council process.
     Returns Server-Sent Events as each stage completes.
+
+    When regenerate=true, the trailing assistant message is assumed already
+    removed by the caller; no new user message is added and the LAST existing
+    user message is re-run (used by the Regenerate button).
     """
     # Check if conversation exists
     conversation = storage.get_conversation(conversation_id)
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    # Check if this is the first message
-    is_first_message = len(conversation["messages"]) == 0
+    if regenerate:
+        # Re-run the most recent user message; don't add a new one.
+        user_msgs = [m for m in conversation["messages"] if m.get("role") == "user"]
+        if not user_msgs:
+            raise HTTPException(status_code=400, detail="Nothing to regenerate")
+        content = user_msgs[-1]["content"]
+        is_first_message = False
+    else:
+        content = request.content
+        is_first_message = len(conversation["messages"]) == 0
 
     async def event_generator():
         # Await a coroutine while emitting SSE keep-alive comments every few
@@ -171,18 +225,19 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             yield (None, task.result())
 
         try:
-            # Add user message
-            storage.add_user_message(conversation_id, request.content)
+            # Add user message (skipped on regenerate — reusing the last one).
+            if not regenerate:
+                storage.add_user_message(conversation_id, content)
 
             # Start title generation in parallel (don't await yet)
             title_task = None
             if is_first_message:
-                title_task = asyncio.create_task(generate_conversation_title(request.content))
+                title_task = asyncio.create_task(generate_conversation_title(content))
 
             # Stage 1: Collect responses
             yield f"data: {json.dumps({'type': 'stage1_start'})}\n\n"
             stage1_results = None
-            async for ping, result in run_with_heartbeat(stage1_collect_responses(request.content)):
+            async for ping, result in run_with_heartbeat(stage1_collect_responses(content)):
                 if ping:
                     yield ping
                 else:
@@ -192,7 +247,7 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             # Stage 2: Collect rankings
             yield f"data: {json.dumps({'type': 'stage2_start'})}\n\n"
             stage2_pair = None
-            async for ping, result in run_with_heartbeat(stage2_collect_rankings(request.content, stage1_results)):
+            async for ping, result in run_with_heartbeat(stage2_collect_rankings(content, stage1_results)):
                 if ping:
                     yield ping
                 else:
@@ -204,7 +259,7 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             # Stage 3: Synthesize final answer
             yield f"data: {json.dumps({'type': 'stage3_start'})}\n\n"
             stage3_result = None
-            async for ping, result in run_with_heartbeat(stage3_synthesize_final(request.content, stage1_results, stage2_results)):
+            async for ping, result in run_with_heartbeat(stage3_synthesize_final(content, stage1_results, stage2_results)):
                 if ping:
                     yield ping
                 else:

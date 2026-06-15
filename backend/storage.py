@@ -156,6 +156,30 @@ def add_assistant_message(
     save_conversation(conversation)
 
 
+def delete_conversation(conversation_id: str) -> bool:
+    """Delete a conversation file. Returns True if it existed."""
+    path = get_conversation_path(conversation_id)
+    if os.path.exists(path):
+        os.remove(path)
+        return True
+    return False
+
+
+def truncate_messages(conversation_id: str, keep_count: int):
+    """
+    Keep only the first `keep_count` messages, dropping the rest.
+    Used for edit (drop the edited message onward) and regenerate (drop the
+    trailing assistant message).
+    """
+    conversation = get_conversation(conversation_id)
+    if conversation is None:
+        raise ValueError(f"Conversation {conversation_id} not found")
+
+    keep_count = max(0, min(keep_count, len(conversation["messages"])))
+    conversation["messages"] = conversation["messages"][:keep_count]
+    save_conversation(conversation)
+
+
 def update_conversation_title(conversation_id: str, title: str):
     """
     Update the title of a conversation.

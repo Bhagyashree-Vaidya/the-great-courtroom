@@ -133,6 +133,107 @@
   cursor: not-allowed;
 }
 
+/* ----- Per-message actions (copy / edit / regenerate) ----- */
+.msg-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.msg-action {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 13px;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.msg-action:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--line-strong);
+  background: var(--paper-cream);
+}
+
+.msg-action:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.msg-note {
+  margin-top: 10px;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--ink-faint);
+}
+.msg-note.error { color: #a85440; font-style: normal; }
+
+/* ----- Inline edit box ----- */
+.edit-box { display: flex; flex-direction: column; gap: 10px; }
+
+.edit-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--paper-card);
+  border: 1px solid var(--rose-deep);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+
+.edit-actions { display: flex; gap: 10px; }
+
+.edit-save,
+.edit-cancel {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+}
+
+.edit-save {
+  background: var(--sage-deep);
+  color: var(--paper-card);
+  border-color: var(--sage-deep);
+}
+.edit-save:disabled { opacity: 0.5; cursor: not-allowed; }
+.edit-cancel { background: transparent; color: var(--ink-soft); }
+
+/* ----- Stop button (mirrors send-button shape) ----- */
+.stop-button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 15px 28px;
+  background: var(--paper-card);
+  border: 1px solid var(--rose-deep);
+  border-radius: var(--radius-md);
+  color: var(--rose-deep);
+  font-family: var(--font-sans);
+  font-size: 0.98rem;
+  font-weight: 600;
+  white-space: nowrap;
+  align-self: flex-end;
+  box-shadow: var(--shadow-sm);
+}
+
+.stop-button:hover { background: var(--paper-cream); }
+
+.stop-icon {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--rose-deep);
+  display: inline-block;
+}
+
 .send-button {
   padding: 15px 30px;
   background: var(--sage-deep);
