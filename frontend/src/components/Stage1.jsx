@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { useReveal } from '../useReveal';
 import './Stage1.css';
 
 export default function Stage1({ responses }) {
   const [activeTab, setActiveTab] = useState(0);
+  const ref = useReveal();
 
   if (!responses || responses.length === 0) {
     return null;
@@ -12,7 +14,7 @@ export default function Stage1({ responses }) {
   const label = (r) => r.name || r.model;
 
   return (
-    <div className="stage stage1">
+    <div className="stage stage1" ref={ref}>
       <h3 className="stage-title">The five perspectives</h3>
 
       <div className="tabs">

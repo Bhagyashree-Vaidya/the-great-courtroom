@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import confetti from 'canvas-confetti';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 import { api, setPassword } from '../api';
 import './PasswordGate.css';
+
+gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 // three.js is heavy; only pull it in when the locked landing actually shows.
 const AnyaPeek = lazy(() => import('./AnyaPeek'));
@@ -144,6 +149,7 @@ export default function PasswordGate({ children }) {
   const [policyOpen, setPolicyOpen] = useState(false); // terms & privacy modal
   const lookTargetRef = useRef(null); // {x, y} the character looks at
   const typingRef = useRef(false); // true while the password field is focused
+  const landingRef = useRef(null); // scope + scroller for GSAP reveals
   const loginRef = useRef(null);
   const cardRef = useRef(null);
   const inputRef = useRef(null);
@@ -277,6 +283,48 @@ export default function PasswordGate({ children }) {
     };
   }, [status, lookAt, caretPoint]);
 
+  // GSAP reveals: hero fades up on load; sections rise in as you scroll the
+  // landing. Kept subtle (short, soft easing) to fit the calm papermorphism.
+  useGSAP(
+    () => {
+      if (status !== 'locked') return;
+      const scroller = landingRef.current;
+      const st = (trigger) => ({ trigger, scroller, start: 'top 88%', once: true });
+
+      // Hero fades up on load (no ScrollTrigger, so it always plays).
+      gsap.from('.hero .eyebrow, .hero h1, .hero .tagline, .hero-lede', {
+        y: 26, autoAlpha: 0, duration: 0.8, ease: 'power2.out', stagger: 0.12,
+      });
+
+      // Decorative elements may fade in on scroll.
+      gsap.from('.thinker-card', {
+        scrollTrigger: st('.thinkers'),
+        y: 36, autoAlpha: 0, duration: 0.7, ease: 'power3.out', stagger: 0.1,
+      });
+      gsap.from('.council-note > *', {
+        scrollTrigger: st('.council-note'),
+        y: 24, autoAlpha: 0, duration: 0.7, ease: 'power2.out', stagger: 0.1,
+      });
+
+      // Login + footer use a RISE only (no opacity hide): even if a trigger
+      // never fired, these stay fully visible and usable — the login must
+      // never be invisible.
+      gsap.from('.login-card', {
+        scrollTrigger: st('.login-block'),
+        y: 40, duration: 0.8, ease: 'power3.out',
+      });
+      gsap.from('.footer-card > *', {
+        scrollTrigger: st('.landing-footer'),
+        y: 20, duration: 0.6, ease: 'power2.out', stagger: 0.08,
+      });
+
+      // Recompute trigger positions after the lazy 3D canvases settle.
+      const id = setTimeout(() => ScrollTrigger.refresh(), 600);
+      return () => clearTimeout(id);
+    },
+    { scope: landingRef, dependencies: [status] }
+  );
+
   const scrollToLogin = () => {
     loginRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     loginRef.current?.querySelector('input')?.focus();
@@ -332,7 +380,7 @@ export default function PasswordGate({ children }) {
   }
 
   return (
-    <div className="landing">
+    <div className="landing" ref={landingRef}>
       <nav className="landing-nav">
         <span className="wordmark">The Great Courtroom</span>
         <button className="nav-login" onClick={scrollToLogin}>
