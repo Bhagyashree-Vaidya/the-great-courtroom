@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { useReveal } from '../useReveal';
 import './Stage2.css';
 
 function deAnonymizeText(text, labelToName) {
@@ -16,6 +17,7 @@ function deAnonymizeText(text, labelToName) {
 export default function Stage2({ rankings, labelToModel, aggregateRankings }) {
   const [activeTab, setActiveTab] = useState(0);
   const labelToName = labelToModel; // values are persona names
+  const ref = useReveal();
 
   if (!rankings || rankings.length === 0) {
     return null;
@@ -24,7 +26,7 @@ export default function Stage2({ rankings, labelToModel, aggregateRankings }) {
   const label = (r) => r.name || r.model;
 
   return (
-    <div className="stage stage2">
+    <div className="stage stage2" ref={ref}>
       <h3 className="stage-title">How the thinkers rated each other</h3>
 
       <p className="stage-description">
