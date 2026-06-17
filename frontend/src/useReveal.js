@@ -12,7 +12,11 @@ export function useReveal(y = 18) {
   useGSAP(
     () => {
       if (ref.current) {
-        gsap.from(ref.current, { y, opacity: 0, duration: 0.5, ease: 'power2.out' });
+        // clearProps so the element always lands at its natural position with
+        // no residual inline transform/opacity left behind.
+        gsap.from(ref.current, {
+          y, opacity: 0, duration: 0.5, ease: 'power2.out', clearProps: 'all',
+        });
       }
     },
     { scope: ref }

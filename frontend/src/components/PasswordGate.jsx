@@ -291,36 +291,37 @@ export default function PasswordGate({ children }) {
       const scroller = landingRef.current;
       const st = (trigger) => ({ trigger, scroller, start: 'top 88%', once: true });
 
+      // clearProps wipes GSAP's inline styles when the tween finishes, so the
+      // element always lands at its natural CSS position (never stuck with a
+      // residual transform).
       // Hero fades up on load (no ScrollTrigger, so it always plays).
       gsap.from('.hero .eyebrow, .hero h1, .hero .tagline, .hero-lede', {
         y: 26, autoAlpha: 0, duration: 0.8, ease: 'power2.out', stagger: 0.12,
+        clearProps: 'all',
       });
 
-      // Decorative elements may fade in on scroll.
+      // Decorative elements fade in on scroll.
       gsap.from('.thinker-card', {
         scrollTrigger: st('.thinkers'),
         y: 36, autoAlpha: 0, duration: 0.7, ease: 'power3.out', stagger: 0.1,
+        clearProps: 'all',
       });
       gsap.from('.council-note > *', {
         scrollTrigger: st('.council-note'),
         y: 24, autoAlpha: 0, duration: 0.7, ease: 'power2.out', stagger: 0.1,
+        clearProps: 'all',
       });
 
       // Login + footer use a RISE only (no opacity hide): even if a trigger
-      // never fired, these stay fully visible and usable — the login must
-      // never be invisible.
+      // never fired, these stay fully visible and usable.
       gsap.from('.login-card', {
         scrollTrigger: st('.login-block'),
-        y: 40, duration: 0.8, ease: 'power3.out',
+        y: 40, duration: 0.8, ease: 'power3.out', clearProps: 'transform',
       });
       gsap.from('.footer-card > *', {
         scrollTrigger: st('.landing-footer'),
-        y: 20, duration: 0.6, ease: 'power2.out', stagger: 0.08,
+        y: 20, duration: 0.6, ease: 'power2.out', stagger: 0.08, clearProps: 'transform',
       });
-
-      // Recompute trigger positions after the lazy 3D canvases settle.
-      const id = setTimeout(() => ScrollTrigger.refresh(), 600);
-      return () => clearTimeout(id);
     },
     { scope: landingRef, dependencies: [status] }
   );
