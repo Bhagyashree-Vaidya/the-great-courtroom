@@ -29,7 +29,7 @@ const THINKERS = [
     key: 'expansionist',
     name: 'The Expansionist',
     line: 'Looks for bigger opportunities, hidden possibilities, and paths nobody considered.',
-    overflow: 'bottom-left',
+    overflow: 'expansionist',
   },
   {
     key: 'outsider',
