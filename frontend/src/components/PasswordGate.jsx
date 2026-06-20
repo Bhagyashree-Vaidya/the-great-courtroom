@@ -415,21 +415,10 @@ export default function PasswordGate({ children }) {
             <article className={`thinker-card overflow-${t.overflow}`} key={t.key}>
               <span className="thinker-num">{String(i + 1).padStart(2, '0')}</span>
               <div className="thinker-pose">
-                {t.key === 'expansionist' ? (
-                  <video
-                    src="/expansionist.mp4"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    aria-label={t.name}
-                  />
-                ) : (
-                  <img
-                    src={`/${t.key}.png`}
-                    alt={t.name}
-                  />
-                )}
+                <img
+                  src={t.key === 'expansionist' ? `/${t.key}.gif` : `/${t.key}.png`}
+                  alt={t.name}
+                />
               </div>
               <h3>{t.name}</h3>
               <p>{t.line}</p>
