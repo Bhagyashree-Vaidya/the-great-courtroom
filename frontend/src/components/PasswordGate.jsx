@@ -409,9 +409,19 @@ export default function PasswordGate({ children }) {
           {THINKERS.map((t, i) => (
             <article className="thinker-card" key={t.key}>
               <span className="thinker-num">{String(i + 1).padStart(2, '0')}</span>
-              <Suspense fallback={<div className="thinker-pose" />}>
-                <AnyaCard poseKey={t.key} />
-              </Suspense>
+              {t.key === 'contrarian' ? (
+                <div className="thinker-pose">
+                  <img
+                    src="/contrarian.png"
+                    alt="The Contrarian"
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  />
+                </div>
+              ) : (
+                <Suspense fallback={<div className="thinker-pose" />}>
+                  <AnyaCard poseKey={t.key} />
+                </Suspense>
+              )}
               <h3>{t.name}</h3>
               <p>{t.line}</p>
             </article>
