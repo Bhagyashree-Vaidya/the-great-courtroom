@@ -17,26 +17,31 @@ const THINKERS = [
     key: 'contrarian',
     name: 'The Contrarian',
     line: 'Asks, "What if everyone is wrong?"',
+    overflow: 'top-right',
   },
   {
     key: 'first_principles',
     name: 'The First Principles Thinker',
     line: 'Strips the problem down to the basics and rebuilds it from the ground up.',
+    overflow: 'bottom-left',
   },
   {
     key: 'expansionist',
     name: 'The Expansionist',
     line: 'Looks for bigger opportunities, hidden possibilities, and paths nobody considered.',
+    overflow: 'top-left',
   },
   {
     key: 'outsider',
     name: 'The Outsider',
     line: 'Brings a fresh set of eyes and questions assumptions that insiders often miss.',
+    overflow: 'bottom-right',
   },
   {
     key: 'skeptic',
     name: 'The Skeptic',
     line: 'Stress-tests ideas, spots risks, and looks for what could break.',
+    overflow: 'top-right',
   },
 ];
 
@@ -407,13 +412,12 @@ export default function PasswordGate({ children }) {
 
         <section className="thinkers">
           {THINKERS.map((t, i) => (
-            <article className="thinker-card" key={t.key}>
+            <article className={`thinker-card overflow-${t.overflow}`} key={t.key}>
               <span className="thinker-num">{String(i + 1).padStart(2, '0')}</span>
               <div className="thinker-pose">
                 <img
                   src={`/${t.key}.png`}
                   alt={t.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 />
               </div>
               <h3>{t.name}</h3>
