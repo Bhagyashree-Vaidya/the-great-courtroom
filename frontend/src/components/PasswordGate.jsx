@@ -172,7 +172,7 @@ export default function PasswordGate({ children }) {
       .catch(() => setStatus('locked'));
 
     // Delay the Expansionist GIF so it doesn't loop immediately on load
-    const timer = setTimeout(() => setShowExpansionistGif(true), 1500);
+    const timer = setTimeout(() => setShowExpansionistGif(true), 3500);
     return () => clearTimeout(timer);
   }, []);
 
