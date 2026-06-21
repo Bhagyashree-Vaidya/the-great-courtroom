@@ -151,6 +151,7 @@ export default function PasswordGate({ children }) {
   const [mood, setMood] = useState('neutral'); // neutral | shocked | happy
   const [shake, setShake] = useState(false);
   const [modelFailed, setModelFailed] = useState(false);
+  const [showExpansionistGif, setShowExpansionistGif] = useState(false);
   const [policyOpen, setPolicyOpen] = useState(false); // terms & privacy modal
   const lookTargetRef = useRef(null); // {x, y} the character looks at
   const typingRef = useRef(false); // true while the password field is focused
@@ -169,6 +170,10 @@ export default function PasswordGate({ children }) {
       .checkAuth()
       .then((ok) => setStatus(ok ? 'open' : 'locked'))
       .catch(() => setStatus('locked'));
+
+    // Delay the Expansionist GIF so it doesn't loop immediately on load
+    const timer = setTimeout(() => setShowExpansionistGif(true), 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   // Persona pose snapshots for the thinker cards (rendered from the GLB once).
@@ -416,7 +421,11 @@ export default function PasswordGate({ children }) {
               <span className="thinker-num">{String(i + 1).padStart(2, '0')}</span>
               <div className="thinker-pose">
                 <img
-                  src={t.key === 'expansionist' ? `/${t.key}.gif` : `/${t.key}.png`}
+                  src={
+                    t.key === 'expansionist'
+                      ? (showExpansionistGif ? `/${t.key}.gif` : `/${t.key}.png`)
+                      : `/${t.key}.png`
+                  }
                   alt={t.name}
                 />
               </div>
