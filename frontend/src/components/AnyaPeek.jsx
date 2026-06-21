@@ -83,6 +83,7 @@ export default function AnyaPeek({ mood, lookTargetRef, typingRef, onLoadError }
         const headObj = gltf.scene.getObjectByName('headobject');
         const hairObj = gltf.scene.getObjectByName('hair');
         const eyeObj = gltf.scene.getObjectByName('eye');
+        const faceObj = gltf.scene.getObjectByName('face');
         handNode = gltf.scene.getObjectByName('hand');
         eyeNode = eyeObj;
         handBaseRot = handNode ? handNode.rotation.x : 0;
@@ -97,7 +98,7 @@ export default function AnyaPeek({ mood, lookTargetRef, typingRef, onLoadError }
           parent.add(pivot);
           pivot.position.copy(parent.worldToLocal(headCenter.clone()));
           pivot.updateMatrixWorld(true);
-          [headObj, hairObj, eyeObj].forEach((n) => n && pivot.attach(n));
+          [headObj, hairObj, faceObj].forEach((n) => n && pivot.attach(n));
           headNode = pivot;
         } else {
           headNode = gltf.scene;
@@ -161,7 +162,6 @@ export default function AnyaPeek({ mood, lookTargetRef, typingRef, onLoadError }
         // open (peeking) and pull her head toward center so the overlay lines
         // up, with a playful tilt.
         coverAmt += ((typing ? 1 : 0) - coverAmt) * 0.12;
-        if (eyeNode) eyeNode.scale.y = 1;
 
         if (shockT > 0) {
           shockT = Math.max(0, shockT - dt);
