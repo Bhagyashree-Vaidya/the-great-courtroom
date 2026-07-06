@@ -1,4 +1,4 @@
-# CLAUDE.md - Technical Notes for The Council
+# Technical Notes for The Council
 
 This file contains technical details, architectural decisions, and important implementation notes for future development sessions.
 
