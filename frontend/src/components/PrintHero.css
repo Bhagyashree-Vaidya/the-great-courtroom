@@ -1,0 +1,85 @@
+/* Only show the hero section when printing to PDF */
+@media screen {
+  .print-hero {
+    display: none !important;
+  }
+}
+
+@media print {
+  .print-hero {
+    display: block;
+    margin: 10pt 0 20pt;
+    page-break-after: avoid;
+    text-align: center;
+  }
+
+  .print-hero-title {
+    margin-bottom: 15pt;
+  }
+
+  .print-hero-title h1 {
+    font-family: var(--font-serif);
+    font-size: 22pt;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .print-hero-thinkers {
+    display: flex;
+    justify-content: center;
+    gap: 20pt;
+    margin-top: 40pt;
+    flex-wrap: wrap;
+    max-width: 500pt;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .print-thinker-card {
+    /* 500pt total max width - 20pt gap = 480pt. 480 / 2 = 240pt */
+    width: 220pt;
+    background: var(--paper-card);
+    border: 1pt solid var(--paper-edge);
+    border-radius: 12pt;
+    padding: 35pt 15pt 15pt; /* extra top padding for overlapping image */
+    position: relative;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .print-thinker-pose {
+    position: absolute;
+    top: -35pt;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 75pt;
+    height: 75pt;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .print-thinker-pose img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  .print-thinker-card h3 {
+    font-family: var(--font-serif);
+    font-size: 14pt;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 6pt 0;
+    line-height: 1.2;
+  }
+
+  .print-thinker-card p {
+    font-size: 9.5pt;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    margin: 0;
+  }
+}
