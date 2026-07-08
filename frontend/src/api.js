@@ -189,4 +189,17 @@ export const api = {
       }
     }
   },
+
+  /**
+   * Get a conversation via the public share endpoint (no password required).
+   */
+  async getSharedConversation(conversationId) {
+    const response = await fetch(
+      `${API_BASE}/api/share/${conversationId}`
+    );
+    if (!response.ok) {
+      throw new Error('Conversation not found');
+    }
+    return response.json();
+  },
 };

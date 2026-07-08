@@ -59,9 +59,31 @@
   font-size: 1.05rem;
   font-weight: 600;
   margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.model-badge {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  background: var(--paper-beige);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 10px;
+  letter-spacing: 0.01em;
 }
 
 .response-text {
   color: var(--ink);
   line-height: 1.7;
+}
+
+@media screen {
+  .tab-content-hidden {
+    display: none !important;
+  }
 }

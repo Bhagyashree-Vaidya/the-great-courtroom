@@ -35,7 +35,9 @@ async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:
             output_rules=OUTPUT_RULES,
         )
         messages = [{"role": "user", "content": prompt}]
-        return member, await query_model(member["model"], messages)
+        # Respect per-member token budget (e.g. Gemini needs more room).
+        max_tokens = member.get("max_tokens", 2000)
+        return member, await query_model(member["model"], messages, max_tokens=max_tokens)
 
     results = await asyncio.gather(*(ask(m) for m in COUNCIL_MEMBERS))
 
@@ -84,7 +86,8 @@ async def stage2_collect_rankings(
 
     # Each council member evaluates, using its own backing model.
     async def rank(member: Dict[str, str]):
-        return member, await query_model(member["model"], messages)
+        max_tokens = member.get("max_tokens", 2000)
+        return member, await query_model(member["model"], messages, max_tokens=max_tokens)
 
     results = await asyncio.gather(*(rank(m) for m in COUNCIL_MEMBERS))
 

@@ -64,8 +64,25 @@ async def query_model(
                 data = response.json()
                 message = data['choices'][0]['message']
 
+                content = message.get('content')
+
+                # Some reasoning models (e.g. Gemini thinking-mode) return
+                # content=null when they exhaust max_tokens during internal
+                # reasoning. Fall back to the reasoning text so the thinker
+                # isn't silently dropped from the council.
+                if not content:
+                    reasoning_details = message.get('reasoning_details') or []
+                    for detail in reasoning_details:
+                        text = detail.get('text') or detail.get('summary')
+                        if text and text.strip():
+                            content = text.strip()
+                            break
+                    # Also check top-level 'reasoning' field (xAI / others)
+                    if not content:
+                        content = message.get('reasoning', '')
+
                 return {
-                    'content': message.get('content'),
+                    'content': content,
                     'reasoning_details': message.get('reasoning_details')
                 }
 

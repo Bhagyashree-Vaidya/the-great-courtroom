@@ -13,6 +13,7 @@ export default function Sidebar({
   const [menuId, setMenuId] = useState(null); // which item's menu is open
   const [renamingId, setRenamingId] = useState(null);
   const [renameText, setRenameText] = useState('');
+  const [copiedId, setCopiedId] = useState(null); // flash "Link copied!" feedback
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -39,6 +40,19 @@ export default function Sidebar({
     setMenuId(null);
     if (window.confirm(`Delete "${conv.title || 'this decision'}"? This cannot be undone.`)) {
       onDeleteConversation(conv.id);
+    }
+  };
+
+  const shareConversation = async (conv) => {
+    setMenuId(null);
+    const url = `${window.location.origin}/share/${conv.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(conv.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      // Fallback: prompt with the URL
+      window.prompt('Copy this share link:', url);
     }
   };
 
@@ -93,9 +107,13 @@ export default function Sidebar({
                   </button>
                   {menuId === conv.id && (
                     <div className="conversation-menu" ref={menuRef} onClick={(e) => e.stopPropagation()}>
+                      <button onClick={() => shareConversation(conv)}>Share</button>
                       <button onClick={() => startRename(conv)}>Rename</button>
                       <button className="danger" onClick={() => confirmDelete(conv)}>Delete</button>
                     </div>
+                  )}
+                  {copiedId === conv.id && (
+                    <div className="copied-toast">Link copied!</div>
                   )}
                 </>
               )}

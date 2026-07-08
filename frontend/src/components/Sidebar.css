@@ -189,3 +189,21 @@
   color: var(--paper-card);
   border-color: var(--brown);
 }
+
+.copied-toast {
+  position: absolute;
+  bottom: -4px;
+  left: 14px;
+  right: 14px;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--sage-deep);
+  animation: toast-fade 2s ease forwards;
+}
+
+@keyframes toast-fade {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; }
+}

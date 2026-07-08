@@ -208,3 +208,261 @@ button {
   );
   margin: 28px 0;
 }
+
+/* =========================================================================
+   PRINT / EXPORT PDF
+   When the user clicks "Export PDF", window.print() opens the browser's
+   print dialog. This stylesheet strips away interactive chrome and
+   reformats the conversation into a clean, professional document.
+   ========================================================================= */
+
+@media print {
+  /* ---- Reset page ---- */
+  @page {
+    size: A4;
+    margin: 1.4cm 1.8cm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  body {
+    background: #fff !important;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    color: #2c2520 !important;
+  }
+
+  body::before {
+    display: none !important; /* kill paper-grain texture */
+  }
+
+  /* ---- Hide interactive chrome ---- */
+  .sidebar,
+  .input-form,
+  .msg-actions,
+  .edit-box,
+  .loading-indicator,
+  .stage-loading,
+  .deliberation-hint,
+  .spinner,
+  .empty-state,
+  .send-button,
+  .stop-button,
+  .export-pdf-btn,
+  .shared-topbar,
+  .shared-footer,
+  .landing,
+  .gate-loading,
+  nav,
+  .sidebar-footer,
+  .logout-btn {
+    display: none !important;
+  }
+
+  /* ---- Layout: full width, no scrollbar ---- */
+  .app,
+  .chat-interface,
+  .shared-view {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .messages-container,
+  .shared-content {
+    overflow: visible !important;
+    padding: 0 !important;
+    height: auto !important;
+  }
+
+  #root {
+    height: auto !important;
+  }
+
+  /* ---- Print header ---- */
+  .messages-container::before,
+  .shared-content::before {
+    content: "The Great Courtroom";
+    display: block;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 18pt;
+    font-weight: 600;
+    color: #7b6758;
+    text-align: center;
+    padding-bottom: 10pt;
+    margin-bottom: 16pt;
+    border-bottom: 1.5pt solid #efe8db;
+  }
+
+  /* ---- Conversation title (shared view) ---- */
+  .shared-title {
+    font-size: 15pt;
+    text-align: center;
+    color: #3b332b;
+    margin-bottom: 18pt;
+    padding-bottom: 10pt;
+  }
+
+  /* ---- User question ---- */
+  .message-label {
+    font-size: 7.5pt;
+    letter-spacing: 0.1em;
+    color: #b3847c;
+    margin-bottom: 4pt;
+  }
+
+  .shared-user-label {
+    font-size: 7.5pt;
+    letter-spacing: 0.1em;
+    color: #b3847c;
+    margin-bottom: 4pt;
+  }
+
+  .user-message .message-content,
+  .shared-user-content {
+    background: #fcf9f3 !important;
+    border: 1pt solid #efe8db !important;
+    border-radius: 8pt;
+    padding: 12pt 14pt;
+    box-shadow: none !important;
+    margin-bottom: 12pt;
+    page-break-inside: avoid;
+  }
+
+  /* ---- Message groups ---- */
+  .message-group,
+  .shared-message-group {
+    margin-bottom: 16pt;
+    max-width: 100%;
+  }
+
+  /* ---- Stages ---- */
+  .stage {
+    background: #fcf9f3 !important;
+    border: 1pt solid #efe8db !important;
+    border-radius: 8pt;
+    padding: 14pt;
+    margin: 10pt 0;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+
+  .stage-title {
+    font-size: 12pt;
+    font-weight: 600;
+    color: #3b332b;
+    margin-bottom: 10pt;
+    padding-bottom: 6pt;
+    border-bottom: 0.75pt solid #efe8db;
+  }
+
+  /* ---- Thinker tabs: show ALL tabs as sections (don't hide inactive) ---- */
+  .tabs {
+    display: none !important; /* hide tab buttons in print */
+  }
+
+  .tab-content {
+    display: block !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 6pt 0 !important;
+  }
+
+  /* ---- Model name + badge ---- */
+  .model-name,
+  .ranking-model {
+    font-size: 11pt;
+    color: #b3847c;
+    margin-bottom: 6pt;
+    display: flex !important;
+    align-items: center;
+    gap: 6pt;
+  }
+
+  .model-badge {
+    font-size: 7pt;
+    background: #f7f3eb !important;
+    border: 0.5pt solid #e8ded1 !important;
+    padding: 1pt 6pt;
+  }
+
+  /* ---- Stage 2 aggregate rankings ---- */
+  .aggregate-rankings {
+    background: #f7f3eb !important;
+    border: 0.75pt solid #e8ded1 !important;
+    padding: 10pt;
+    border-radius: 6pt;
+    page-break-inside: avoid;
+  }
+
+  .aggregate-item {
+    background: #fcf9f3 !important;
+    border: 0.5pt solid #efe8db !important;
+    box-shadow: none !important;
+    padding: 6pt 8pt;
+    border-radius: 4pt;
+  }
+
+  /* ---- Stage 3 verdict ---- */
+  .stage3 {
+    page-break-before: auto;
+  }
+
+  .chairman-label {
+    font-size: 10pt;
+    color: #7e8f74;
+    font-weight: 600;
+    margin-bottom: 8pt;
+  }
+
+  .final-text {
+    font-size: 10.5pt;
+    line-height: 1.6;
+  }
+
+  /* ---- Parsed rankings ---- */
+  .parsed-ranking {
+    border-top: 0.5pt solid #e8ded1 !important;
+    padding-top: 8pt;
+    margin-top: 8pt;
+  }
+
+  /* ---- Markdown content ---- */
+  .markdown-content {
+    font-size: 10.5pt;
+    line-height: 1.6;
+  }
+
+  .markdown-content h1 { font-size: 14pt; margin-top: 12pt; }
+  .markdown-content h2 { font-size: 12pt; margin-top: 10pt; }
+  .markdown-content h3 { font-size: 11pt; margin-top: 8pt; }
+  .markdown-content ul,
+  .markdown-content ol { padding-left: 16pt; }
+  .markdown-content p { margin-bottom: 6pt; }
+
+  /* ---- Links: show URL after text ---- */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 8pt;
+    color: #9b9082;
+  }
+
+  a[href^="#"]::after,
+  a[href^="javascript"]::after {
+    content: "";
+  }
+
+  /* ---- Print footer (page number) ---- */
+  @page {
+    @bottom-center {
+      content: "The Great Courtroom — Page " counter(page);
+      font-size: 8pt;
+      color: #9b9082;
+    }
+  }
+}

@@ -178,6 +178,15 @@ export default function ChatInterface({
                   {index === lastAssistantIndex && !isLoading && (msg.stage3 || msg.stopped || msg.error) && (
                     <div className="msg-actions">
                       {msg.stage3 && <CopyButton getText={() => verdictText(msg)} label="Copy verdict" />}
+                      {msg.stage3 && (
+                        <button
+                          className="msg-action export-pdf-btn"
+                          onClick={() => window.print()}
+                          type="button"
+                        >
+                          Export PDF
+                        </button>
+                      )}
                       <button className="msg-action" onClick={onRegenerate} type="button">
                         Regenerate
                       </button>

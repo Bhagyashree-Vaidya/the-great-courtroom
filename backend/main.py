@@ -107,6 +107,19 @@ async def get_conversation(conversation_id: str):
     return conversation
 
 
+@app.get("/api/share/{conversation_id}", response_model=Conversation)
+async def get_shared_conversation(conversation_id: str):
+    """Public read-only access to a conversation (no password required).
+
+    Used for shareable links. The UUID is unguessable, providing
+    security-by-obscurity similar to Google Docs "anyone with the link".
+    """
+    conversation = storage.get_conversation(conversation_id)
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return conversation
+
+
 @app.delete("/api/conversations/{conversation_id}",
             dependencies=[Depends(require_password)])
 async def delete_conversation(conversation_id: str):

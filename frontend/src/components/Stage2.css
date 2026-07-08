@@ -82,6 +82,21 @@
   font-size: 1.05rem;
   font-weight: 600;
   margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rank-model {
+  flex: 1;
+  color: var(--ink);
+  font-size: 0.96rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .ranking-content {
@@ -113,3 +128,9 @@
 }
 
 .parsed-ranking li::marker { color: var(--rose-deep); }
+
+@media screen {
+  .tab-content-hidden {
+    display: none !important;
+  }
+}

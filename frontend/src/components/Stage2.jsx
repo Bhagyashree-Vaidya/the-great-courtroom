@@ -3,6 +3,18 @@ import ReactMarkdown from 'react-markdown';
 import { useReveal } from '../useReveal';
 import './Stage2.css';
 
+function friendlyModel(modelId) {
+  if (!modelId) return null;
+  const map = {
+    'openai/gpt-5.1':                'GPT-5.1 · OpenAI',
+    'anthropic/claude-sonnet-4.5':   'Claude Sonnet 4.5 · Anthropic',
+    'google/gemini-3.1-pro-preview': 'Gemini 3.1 Pro · Google',
+    'x-ai/grok-4.3':                 'Grok 4.3 · xAI',
+    'google/gemini-2.5-flash':       'Gemini 2.5 Flash · Google',
+  };
+  return map[modelId] || modelId;
+}
+
 function deAnonymizeText(text, labelToName) {
   if (!labelToName) return text;
 
@@ -47,28 +59,42 @@ export default function Stage2({ rankings, labelToModel, aggregateRankings }) {
         ))}
       </div>
 
-      <div className="tab-content">
-        <div className="ranking-model">{label(rankings[activeTab])}</div>
-        <div className="ranking-content markdown-content">
-          <ReactMarkdown>
-            {deAnonymizeText(rankings[activeTab].ranking, labelToName)}
-          </ReactMarkdown>
-        </div>
+      {/* Render ALL rankings. CSS hides non-active on screen;
+          @media print shows them all so the PDF is complete. */}
+      {rankings.map((rank, index) => (
+        <div
+          key={index}
+          className={`tab-content ${index !== activeTab ? 'tab-content-hidden' : ''}`}
+        >
+          <div className="ranking-model">
+            {label(rank)}
+            {rank.model && (
+              <span className="model-badge">
+                {friendlyModel(rank.model)}
+              </span>
+            )}
+          </div>
+          <div className="ranking-content markdown-content">
+            <ReactMarkdown>
+              {deAnonymizeText(rank.ranking, labelToName)}
+            </ReactMarkdown>
+          </div>
 
-        {rankings[activeTab].parsed_ranking &&
-          rankings[activeTab].parsed_ranking.length > 0 && (
-            <div className="parsed-ranking">
-              <strong>Their ranking:</strong>
-              <ol>
-                {rankings[activeTab].parsed_ranking.map((lbl, i) => (
-                  <li key={i}>
-                    {labelToName && labelToName[lbl] ? labelToName[lbl] : lbl}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
-      </div>
+          {rank.parsed_ranking &&
+            rank.parsed_ranking.length > 0 && (
+              <div className="parsed-ranking">
+                <strong>Their ranking:</strong>
+                <ol>
+                  {rank.parsed_ranking.map((lbl, i) => (
+                    <li key={i}>
+                      {labelToName && labelToName[lbl] ? labelToName[lbl] : lbl}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+        </div>
+      ))}
 
       {aggregateRankings && aggregateRankings.length > 0 && (
         <div className="aggregate-rankings">
@@ -80,7 +106,12 @@ export default function Stage2({ rankings, labelToModel, aggregateRankings }) {
             {aggregateRankings.map((agg, index) => (
               <div key={index} className="aggregate-item">
                 <span className="rank-position">#{index + 1}</span>
-                <span className="rank-model">{agg.name || agg.model}</span>
+                <span className="rank-model">
+                  {agg.name || agg.model}
+                  {agg.model && (
+                    <span className="model-badge">{friendlyModel(agg.model)}</span>
+                  )}
+                </span>
                 <span className="rank-score">
                   Avg {agg.average_rank.toFixed(2)}
                 </span>
