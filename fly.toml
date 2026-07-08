@@ -27,3 +27,7 @@ primary_region = 'sjc'
   memory = '512mb'
   cpus = 1
   memory_mb = 512
+
+[mounts]
+  source = "council_data"
+  destination = "/app/data"
