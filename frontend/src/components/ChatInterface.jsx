@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
 import Stage3 from './Stage3';
+import PrintHero from './PrintHero';
 import './ChatInterface.css';
 
 function CopyButton({ getText, label = 'Copy' }) {
@@ -85,6 +86,7 @@ export default function ChatInterface({
   return (
     <div className="chat-interface">
       <div className="messages-container">
+        <PrintHero />
         {messages.length === 0 ? (
           <div className="empty-state">
             <h2>What are you deciding?</h2>

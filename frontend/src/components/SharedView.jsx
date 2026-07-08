@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
 import Stage3 from './Stage3';
+import PrintHero from './PrintHero';
 import { api } from '../api';
 import './SharedView.css';
 
@@ -66,6 +67,8 @@ export default function SharedView({ conversationId }) {
 
       <div className="shared-content">
         <h1 className="shared-title">{conversation.title || 'Shared Decision'}</h1>
+
+        <PrintHero />
 
         {messages.map((msg, index) => (
           <div key={index} className="shared-message-group">
